@@ -1,0 +1,19 @@
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N {script_name}
+#$ -q standard.q
+#$ -cwd
+#$ -v PATH
+#$ -o ./log/{script_name}_$JOB_ID_$TASK_ID.out
+#$ -e ./log/{script_name}_$JOB_ID_$TASK_ID.err
+
+set -e
+
+ARG_FP=$1
+if [ -z $SGE_TASK_ID ] || [ $SGE_TASK_ID = "undefined" ]; then
+    LINE_NUM=1
+else
+    LINE_NUM=$SGE_TASK_ID
+fi
+ARGS=`sed "${LINE_NUM}q;d" ${ARG_FP}`
+set -- $ARGS

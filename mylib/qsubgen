@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+import sys
+import pathlib
+import logging
+
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+
+class Params(dict):
+    """
+    Store parameters for template filling
+    """
+    def __missing__(self, key):
+        return '{' + key + '}'
+
+def main(script_fp, arg_fp, template_fp, qsub_fp):
+    # generate header from template
+    with open(template_fp, 'r') as f:
+        template = f.read()
+    params = Params({"script_name": script_fp.stem})
+    header = template.format_map(params)
+
+    # generate body
+    arg_df = pd.read_csv(arg_fp, sep='\t', header=None)
+    arg_cnt, arg_len = arg_df.shape
+    logger.info("found {} arguments with {} columns".format(arg_cnt, arg_len))
+    body = "{script} {arguments}".format_map({
+        "script": "./" + script_fp.name,
+        "arguments": ' '.join(['${}'.format(i) for i in range(1, arg_len+1)])
+    })
+
+    # output execution file
+    qsub_fp.chmod(0o744)
+    with open(qsub_fp, 'w') as f:
+        f.write(header+'\n')
+        f.write(body+'\n')
+    logger.info("output {}".format(qsub_fp))
+
+    logger.info("execute the following command:")
+    cmd = "qsub -t 1-{} -tc 16 {} {}".format(arg_cnt, qsub_fp, arg_fp)
+    print(cmd)
+
+if __name__ == "__main__":
+    script_fp = pathlib.Path(sys.argv[1])
+    arg_fp = pathlib.Path(sys.argv[2])
+    assert script_fp.suffix == ".sh"
+    assert arg_fp.suffix == ".arg"
+    template_fp = pathlib.Path(__file__).parent.joinpath("qsubgen.template")
+    qsub_fp = script_fp.with_suffix(".qsub")
+
+	#log configuration
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.DEBUG,
+                        format=FORMAT, datefmt='%m/%d/%Y %I:%M:%S')
+    main(script_fp, arg_fp, template_fp, qsub_fp)
