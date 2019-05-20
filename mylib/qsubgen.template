@@ -1,11 +1,11 @@
 #!/bin/bash
 #$ -S /bin/bash
-#$ -N {script_name}
+#$ -N {job_name}
 #$ -q standard.q
 #$ -cwd
 #$ -v PATH
-#$ -o ./log/{script_name}_$JOB_ID_$TASK_ID.out
-#$ -e ./log/{script_name}_$JOB_ID_$TASK_ID.err
+#$ -o ./log/{job_name}_$JOB_ID_$TASK_ID.out
+#$ -e ./log/{job_name}_$JOB_ID_$TASK_ID.err
 
 set -e
 
@@ -17,3 +17,5 @@ else
 fi
 ARGS=`sed "${LINE_NUM}q;d" ${ARG_FP}`
 set -- $ARGS
+
+{script} {arguments}
