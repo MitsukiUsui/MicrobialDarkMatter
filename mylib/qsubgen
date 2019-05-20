@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class TemplateParams(dict):
     def __missing__(self, key):
         """
-        keep {unspecified_key} as it is
+        keep {unspecified_key} as it was
         """
         return '{' + key + '}'
 
@@ -44,6 +44,9 @@ def main(script_fp, arg_fp, template_fp, qsub_fp):
     print(cmd)
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG, datefmt="%m/%d/%Y %I:%M:%S",
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
     script_fp = pathlib.Path(sys.argv[1])
     arg_fp = pathlib.Path(sys.argv[2])
     assert script_fp.suffix == ".sh"
@@ -51,8 +54,4 @@ if __name__ == "__main__":
     template_fp = pathlib.Path(__file__).parent.joinpath("qsubgen.template")
     qsub_fp = script_fp.with_suffix(".qsub")
 
-	#log configuration
-    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.DEBUG,
-                        format=FORMAT, datefmt='%m/%d/%Y %I:%M:%S')
     main(script_fp, arg_fp, template_fp, qsub_fp)
