@@ -7,6 +7,7 @@ DATA_DIREC = "/home/mitsuki/data/mag/genome"
 DB_DIREC = "/home/mitsuki/mag/db"
 DB_PATH = "{}/mag.db".format(DB_DIREC)
 GENBANK_PATH = "/home/mitsuki/mag/fetch/data/raw/assembly_summary_genbank.txt"
+REFSEQ_PATH = "/home/mitsuki/mag/fetch/data/raw/assembly_summary_refseq.txt"
 
 def build_local_filepath(genome_name, extension=None):
     possible_extension_set = set(["fna", "faa", "gff"])
