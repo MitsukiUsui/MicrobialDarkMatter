@@ -3,6 +3,7 @@
 import sys
 import pathlib
 import logging
+import datetime
 
 import pandas as pd
 
@@ -28,7 +29,10 @@ def main(script_fp, arg_fp, template_fp, qsub_fp):
     params = TemplateParams({
         "job_name": script_fp.stem,
         "script": "./" + script_fp.name,
-        "arguments": ' '.join(["${}".format(i) for i in range(1, arg_len+1)])
+        "arguments": ' '.join(["${}".format(i) for i in range(1, arg_len+1)]),
+        "script_fp" : script_fp,
+        "arg_fp": arg_fp,
+        "datetime": datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     })
     qsub_script = template.format_map(params)
     logger.info("generated qsub script from {}".format(template_fp))

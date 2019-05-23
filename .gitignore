@@ -21,4 +21,5 @@ log/
 !mylib/qsubgen
 !mylib/qsubgen.template
 !mylib/clearlogs
+#!DataCollection/data/genome_meta.tsv
 
