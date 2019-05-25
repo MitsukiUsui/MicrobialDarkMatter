@@ -9,10 +9,9 @@ faa_fp=${4}
 gff_fp=${5}
 
 #if [ ! -e ${gff_fp} ]; then
-    # generate .fna with parsable sequence_id
-    gunzip -dc ${gz_fp} > ${gz_fp/.gz/}
-    ./prodigal_pre.py ${genome_name} ${gz_fp/.gz/} ${fna_fp}
-    rm ${gz_fp/.gz/}
+    # generate .fna with parsable scaffold_name
+    gunzip -dc ${gz_fp} > ${fna_fp}
+    ./prodigal_pre.py ${genome_name} ${fna_fp} ${fna_fp}
 
     prodigal -i ${fna_fp} \
              -a ${faa_fp} \

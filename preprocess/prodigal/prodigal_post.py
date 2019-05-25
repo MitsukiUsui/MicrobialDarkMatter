@@ -35,7 +35,7 @@ def main(genome_name, in_fp, out_fp):
     with open(out_fp, 'w') as f:
         for line in lines:
             f.write("{}\n".format(line))
-    logger.info("output {}".format(out_fp))
+    logger.info("output gff records with cds_name attribute to {}".format(out_fp))
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG, datefmt="%m/%d/%Y %I:%M:%S",
