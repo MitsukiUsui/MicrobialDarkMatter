@@ -3,7 +3,9 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-DATA_DIREC = "/home/mitsuki/data/mag/genome"
+#DATA_DIREC = "/home/mitsuki/data/mag/genome"
+DATA_DIREC = "/nfs_share/mitsuki/GeneNeighborhoodAnalysis/genome"
+
 DB_DIREC = "/home/mitsuki/mag/db"
 DB_PATH = "{}/mag.db".format(DB_DIREC)
 GENBANK_PATH = "/home/mitsuki/mag/fetch/data/raw/assembly_summary_genbank.txt"

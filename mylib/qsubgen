@@ -38,9 +38,9 @@ def main(script_fp, arg_fp, template_fp, qsub_fp):
     logger.info("generated qsub script from {}".format(template_fp))
 
     # output qsub script
-    qsub_fp.chmod(0o744)
     with open(qsub_fp, 'w') as f:
         f.write(qsub_script)
+    qsub_fp.chmod(0o744)
     logger.info("saved qsub script to {}".format(qsub_fp))
 
     logger.info("execute the following array job command:")

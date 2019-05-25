@@ -37,4 +37,8 @@ class GffRecord:
         return atts
 
     def encode_attributes(self, atts):
-        return ';'.join("{}={}".format(key, val) for key, val in atts.items())
+        text = ""
+        for key, val in atts.items():
+            text += "{}={};".format(key, val)
+        return text
+
