@@ -4,19 +4,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from . import path
-sys.path.append(path.DB_DIREC)
+sys.path.append(path.DB_LIB_DIREC)
 from myschema import Project, Genome, Scaffold, Cds
 
 DB_PATH=path.DB_PATH
 
 
-def get_session():
-    engine = create_engine('sqlite:///{}'.format(DB_PATH))
+def get_session(fp=None):
+    engine = create_engine('sqlite:///{}'.format(fp if fp else DB_PATH))
     Session = sessionmaker(bind=engine)
     return Session()
 
-def get_connection():
-    engine = create_engine('sqlite:///{}'.format(DB_PATH))
+def get_connection(fp=None):
+    engine = create_engine('sqlite:///{}'.format(fp if fp else DB_PATH))
     return engine.connect()
 
 def load_genomes(genome_names, session=None, to_dict=False):

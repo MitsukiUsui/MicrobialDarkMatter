@@ -42,3 +42,11 @@ class GffRecord:
             text += "{}={};".format(key, val)
         return text
 
+
+def parse_gff(gff_fp):
+    records = []
+    with open(gff_fp, 'r') as f:
+        for line in f:
+            if len(line) > 0 and line[0] != '#':
+                records.append(GffRecord(line))
+    return records
