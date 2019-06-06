@@ -3,4 +3,3 @@
 .import ./init/data/genomes.tsv genomes
 .import ./init/data/scaffolds.tsv scaffolds
 .import ./init/data/cdss.tsv cdss
-.read ./init/index.sql

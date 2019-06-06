@@ -12,43 +12,17 @@ from tqdm import tqdm
 ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 import mylib
-from mylib.db import get_connection, Project, Genome, Scaffold, Cds
+from mylib.db import Project, Genome, Scaffold, Cds
+from mylib.db import IDManager
 from mylib.path import build_local_filepath
 from mylib.gff import parse_gff
 
 logger = logging.getLogger(__name__)
+PID = IDManager("projects")
+GID = IDManager("genomes")
+SID = IDManager("scaffolds")
+CID = IDManager("cdss")
 
-
-#--------------------------------------------------------------------------------
-# SQLITE3 ID Management utilities
-#--------------------------------------------------------------------------------
-
-class IDManager:
-    def __init__(self, current_id):
-        self.current_id = current_id
-    def get(self):
-        return self.current_id
-    def new(self):
-        self.current_id += 1
-        return self.current_id
-
-def query_max_id(con, table_name):
-    assert table_name in ("projects", "genomes", "scaffolds", "cdss")
-    query = "SELECT MAX({}_id) from {};".format(table_name[:-1], table_name)
-    max_id = con.execute(query).fetchone()[0]
-    if max_id is None:
-        max_id = 0
-    return max_id
-
-con = get_connection()
-PID = IDManager(query_max_id(con, "projects"))
-GID = IDManager(query_max_id(con, "genomes"))
-SID = IDManager(query_max_id(con, "scaffolds"))
-CID = IDManager(query_max_id(con, "cdss"))
-
-#--------------------------------------------------------------------------------
-# file parsers
-#--------------------------------------------------------------------------------
 
 def load_scaffolds(fna_fp):
     scaffolds = []
@@ -106,6 +80,8 @@ def main(arg_fp, projects_fp, genomes_fp, scaffolds_fp, cdss_fp):
         logger.info("start {} with {} genomes".format(project_name, len(meta_df)))
 
         for _, genome_name in enumerate(tqdm(meta_df["genome_name"])):
+            if _ >= 10:
+                break
             logger.debug("genome_name: {}".format(genome_name))
             genome = Genome(genome_id=GID.new(), project_id=PID.get(), genome_name=genome_name)
             fna_fp = build_local_filepath(genome_name, "fna").replace(".fna", ".dnaseq")

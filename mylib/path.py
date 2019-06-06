@@ -3,11 +3,10 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
-DATA_DIREC = "/home/mitsuki/data/mag/genome"
-#DATA_DIREC = "/nfs_share/mitsuki/GeneNeighborhoodAnalysis/genome"
+DATA_DIREC = "/nfs_share/mitsuki/GeneNeighborhoodAnalysis/genome"
 DB_LIB_DIREC = "/home/mitsuki/GeneNeighborhoodAnalysis/db/init"
-#DB_PATH = "/home/mitsuki/mag/db/mag.db"
-DB_PATH = "/nfs_share/mitsuki/GeneNeighborhoodAnalysis/genome.db"
+#DB_PATH = "/home/mitsuki/Genemag/db/mag.db"
+DB_PATH = "/home/mitsuki/GeneNeighborhoodAnalysis/db/genome.db"
 GENBANK_PATH = "/home/mitsuki/mag/fetch/data/raw/assembly_summary_genbank.txt"
 REFSEQ_PATH = "/home/mitsuki/mag/fetch/data/raw/assembly_summary_refseq.txt"
 
