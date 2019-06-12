@@ -23,12 +23,13 @@ class IDManager:
     """
     SQLITE3 ID Management utility class
     """
-
     def __init__(self, table_name):
-        assert table_name in ("projects", "genomes", "scaffolds", "cdss", "hits")
+        assert table_name in ("projects", "genomes", "scaffolds", "cdss", "hits", "refseqs")
         self.current_id = query_max_id(table_name)
+
     def get(self):
         return self.current_id
+
     def new(self):
         self.current_id += 1
         return self.current_id

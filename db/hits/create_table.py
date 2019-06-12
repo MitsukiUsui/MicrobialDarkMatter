@@ -11,7 +11,7 @@ ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 import mylib
 from mylib.db import IDManager, get_connection
-from mylib.df import load_mmseqs
+from mylib.df import read_mmseqs
 
 logger = logging.getLogger(__name__)
 HID = IDManager("hits")
@@ -36,7 +36,7 @@ def main(mmseqs_fp, hits_fp, error_fp):
     refseq2id = to_ddct(refseqs_df["refseq_name"], refseqs_df["refseq_id"], default=-1)
     logger.info("load refseqs")
 
-    mmseqs_df = load_mmseqs(mmseqs_fp)
+    mmseqs_df = read_mmseqs(mmseqs_fp)
     mmseqs_df["hit_id"] = mmseqs_df.index.map(lambda x : HID.new())
     mmseqs_df["cds_id"] = mmseqs_df["qname"].map(cds2id)
     mmseqs_df["refseq_id"] = mmseqs_df["sname"].map(refseq2id)

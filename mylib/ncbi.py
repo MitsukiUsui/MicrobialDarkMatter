@@ -12,7 +12,7 @@ refseqDAO = None
 
 class AssemblySummaryDAO:
     def __init__(self, assembly_summary_fp):
-        self.df = pd.read_csv(assembly_summary_fp, sep='\t', skiprows=1)
+        self.df = pd.read_csv(assembly_summary_fp, sep='\t', skiprows=1, low_memory=False)
         self.acc2ftp = dict(self.df[["# assembly_accession", "ftp_path"]].values)
         logger.debug("loaded assembly summary from {}".format(assembly_summary_fp))
 
