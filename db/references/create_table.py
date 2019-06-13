@@ -36,7 +36,6 @@ def parse_header(header):
 
 def main(stat_fp, out_fp):
     stat_df = pd.read_csv(stat_fp, sep="\t\t\t", header=None, names=["header", "length"], engine="python")
-    stat_df = stat_df.head()
     logger.info("loaded {} records from {}".format(len(stat_df), stat_fp))
 
     records = list(map(parse_header, stat_df["header"]))
@@ -50,6 +49,7 @@ def main(stat_fp, out_fp):
     out_df["lca"] = header_df["lca"]
     out_df["gk"] = 1
     out_df["fk"] = header_df["description"].map(lambda desc: is_function_known(desc)).astype(int)
+    out_df.drop_duplicate(inplace=True)
     out_df.to_csv(out_fp, index=False, header=None, sep='\t')
     logger.info("outputed {} records to {}".format(len(out_df), out_fp))
 
