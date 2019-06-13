@@ -2,7 +2,6 @@
 
 import sys
 import pathlib
-from pathlib import Path
 
 import pandas as pd
 
@@ -16,7 +15,8 @@ def main(meta_fp, arg_fp):
     meta_df = pd.read_csv(meta_fp, sep='\t')
     records = []
     for _, row in meta_df.iterrows():
-        fp = Path(build_local_filepath(row["genome_name"])) / Path(build_ftp_filepath(row["ncbi_acc"], "faa")).name.replace(".gz", '')
+        fp = pathlib.Path(build_local_filepath(row["genome_name"])) / \
+                pathlib.Path(build_ftp_filepath(row["ncbi_acc"], "faa")).name.replace(".gz", '')
         if not(fp.exists()):
             print("{} does not exist".format(fp))
             exit()

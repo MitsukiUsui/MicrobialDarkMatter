@@ -9,14 +9,14 @@ sys.path.append(str(ROOT_PATH))
 import mylib
 from mylib.gff import GffRecord
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 """
 add cds_name attribute to Prodigal generated gff
 """
 
 def main(genome_name, in_fp, out_fp):
-    logger.info("load {}".format(in_fp))
+    LOGGER.info("load {}".format(in_fp))
     cds_names = []
     lines = []
     with open(in_fp, "r") as f:
@@ -35,7 +35,7 @@ def main(genome_name, in_fp, out_fp):
     with open(out_fp, 'w') as f:
         for line in lines:
             f.write("{}\n".format(line))
-    logger.info("output gff records with cds_name attribute to {}".format(out_fp))
+    LOGGER.info("output gff records with cds_name attribute to {}".format(out_fp))
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.DEBUG, datefmt="%m/%d/%Y %I:%M:%S",

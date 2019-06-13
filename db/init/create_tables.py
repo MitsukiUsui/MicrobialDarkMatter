@@ -17,7 +17,7 @@ from mylib.db import IDManager
 from mylib.path import build_local_filepath
 from mylib.gff import parse_gff
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 PID = IDManager("projects")
 GID = IDManager("genomes")
 SID = IDManager("scaffolds")
@@ -73,25 +73,25 @@ def append_records(records, out_fp):
 
 def main(arg_fp, projects_fp, genomes_fp, scaffolds_fp, cdss_fp):
     arg_df = pd.read_csv(arg_fp, sep='\t', comment='#')
-    logger.info("found {} projects to load".format(len(arg_df)))
+    LOGGER.info("found {} projects to load".format(len(arg_df)))
     for project_name, meta_fp in zip(arg_df["project_name"], arg_df["meta_fp"]):
         project = Project(project_id=PID.new(), project_name=project_name)
         meta_df = pd.read_csv(meta_fp, sep='\t')
-        logger.info("start {} with {} genomes".format(project_name, len(meta_df)))
+        LOGGER.info("start {} with {} genomes".format(project_name, len(meta_df)))
 
         for _, genome_name in enumerate(tqdm(meta_df["genome_name"])):
             if _ >= 10:
                 break
-            logger.debug("genome_name: {}".format(genome_name))
+            LOGGER.debug("genome_name: {}".format(genome_name))
             genome = Genome(genome_id=GID.new(), project_id=PID.get(), genome_name=genome_name)
             fna_fp = build_local_filepath(genome_name, "fna").replace(".fna", ".dnaseq")
             gff_fp = build_local_filepath(genome_name, "gff")
 
             scaffolds = load_scaffolds(fna_fp)
-            logger.debug("loaded {} scaffolds from {}".format(len(scaffolds), fna_fp))
+            LOGGER.debug("loaded {} scaffolds from {}".format(len(scaffolds), fna_fp))
             scaffold2id = dict([(scaffold.scaffold_name, scaffold.scaffold_id) for scaffold in scaffolds])
             cdss = load_cdss(gff_fp, scaffold2id)
-            logger.debug("loaded {} cdss from {}".format(len(cdss), gff_fp))
+            LOGGER.debug("loaded {} cdss from {}".format(len(cdss), gff_fp))
 
             append_records(scaffolds, scaffolds_fp)
             append_records(cdss, cdss_fp)

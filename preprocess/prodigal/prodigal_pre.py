@@ -9,11 +9,11 @@ import logging
 
 from Bio import SeqIO
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def main(genome_name, in_fp, out_fp):
-    logger.info("load {}".format(in_fp))
+    LOGGER.info("load {}".format(in_fp))
     records = []
     for record in SeqIO.parse(in_fp, "fasta"):
         scaffold_name = "{}-{}".format(genome_name, record.id)  # rename to scaffold_id
@@ -22,7 +22,7 @@ def main(genome_name, in_fp, out_fp):
 
     with open(out_fp, "w") as f:
         SeqIO.write(records, f, "fasta")
-    logger.info("saved renamed records to {}".format(out_fp))
+    LOGGER.info("saved renamed records to {}".format(out_fp))
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, datefmt="%m/%d/%Y %I:%M:%S",
