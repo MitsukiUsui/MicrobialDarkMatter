@@ -12,8 +12,8 @@
 set -ue
 
 threads=8
-query_fp="./data/queries.faa.head"
-target_fp="./data/refseqs.faa.head"
+query_fp="./data/queries.faa"
+target_fp="./data/refseqs.faa"
 result_fp="/nfs_share/mitsuki/GeneNeighborhoodAnalysis/search/result.m8.head"
 
 mmseqs_direc=/dev/shm/${USER}/mmseqs/`date +%s`
@@ -26,5 +26,5 @@ result_db=${mmseqs_direc}/resultDB
 
 mmseqs createdb ${query_fp} ${query_db}
 mmseqs createdb ${target_fp} ${target_db}
-mmseqs search ${query_db} ${target_db} ${result_db} ${tmp_direc} --threads ${threads} -s 3 --max-seqs 20
+mmseqs search ${query_db} ${target_db} ${result_db} ${tmp_direc} --threads ${threads} -s 1 --max-seqs 20
 mmseqs convertalis ${query_db} ${target_db} ${result_db} ${result_fp} --threads ${threads}
