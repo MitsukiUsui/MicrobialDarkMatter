@@ -8,7 +8,7 @@
 workspace/
 log/
 .ipynb_checkpoints/
-dataCollection/FMT/
+GenomeCollection/FMT/
 
 # Add all the file types I'm interested in.
 !.gitignore
@@ -22,5 +22,5 @@ dataCollection/FMT/
 !mylib/qsubgen
 !mylib/qsubgen.template
 !mylib/clearlogs
-!dataCollection/data/meta
+!GenomeCollection/data/meta
 

@@ -34,7 +34,7 @@ def main(out_fp):
             })
     out_df = pd.DataFrame(records, columns=["cds_id", "seq"])
     out_df.to_csv(out_fp, index=False, header=None, sep='\t')
-    LOGGER.info("saved {} records to {}".format(len(out_df)))
+    LOGGER.info("saved {} records to {}".format(len(out_df), out_fp))
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
