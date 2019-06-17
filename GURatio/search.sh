@@ -27,4 +27,4 @@ result_db=${mmseqs_direc}/resultDB
 mmseqs createdb ${query_fp} ${query_db}
 mmseqs createdb ${target_fp} ${target_db}
 mmseqs search ${query_db} ${target_db} ${result_db} ${tmp_direc} --threads ${threads} -s 3 --max-seqs 20
-mmseqs convertalis ${query_db} ${target_db} ${result_db} ${result_fp} --threads ${threads}
+mmseqs convertalis ${query_db} ${target_db} ${result_db} ${result_fp} --threads ${threads} --format-mode 2
