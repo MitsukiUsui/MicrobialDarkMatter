@@ -2,6 +2,7 @@ import sys
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import pandas as pd
 
 from . import path
 sys.path.append(path.DB_LIB_DIREC)
@@ -25,7 +26,12 @@ class IDManager:
     """
     def __init__(self, table_name):
         assert table_name in ("projects", "genomes", "scaffolds", "cdss", "hits", "refseqs")
-        self.current_id = query_max_id(table_name)
+        self.con = get_connection()
+        self.table_name = table_name
+        self.current_id = self._query_max_id()
+
+    def __del__(self):
+        self.con.close()
 
     def get(self):
         return self.current_id
@@ -34,46 +40,57 @@ class IDManager:
         self.current_id += 1
         return self.current_id
 
-def query_max_id(table_name, con=None):
-    create_tmp_con = con is None
+    def _query_max_id(self):
+        query = "SELECT MAX({}_id) from {};".format(self.table_name[:-1], self.table_name)
+        max_id = self.con.execute(query).fetchone()[0]
+        max_id = max_id if max_id else 0 # for cases when table has no record
+        return max_id
 
+def load_name2id(table_name, default=-1, con=None):
+    assert table_name in ("projects", "genomes", "scaffolds", "cdss", "refseqs")
+    create_tmp_con = con is None
     if create_tmp_con:
         con = get_connection()
-    query = "SELECT MAX({}_id) from {};".format(table_name[:-1], table_name)
-    max_id = con.execute(query).fetchone()[0]
-    max_id = max_id if max_id else 0 # for cases when table has no record
+
+    col_id = "{}_id".format(table_name[:-1])
+    col_name = "{}_name".format(table_name[:-1])
+    query = "SELECT {}, {} FROM {};".format(col_id, col_name, table_name)
+    df = pd.read_sql_query(query, con)
+    name2id = defaultdict(lambda: default)
+    for name, id_ in zip(df[col_name], df[col_id]):
+        name2id[name] = id_
+
     if create_tmp_con:
         con.close()
-
-    return max_id
+    return name2id
 
 def load_genomes(genome_names, session=None, to_dict=False):
     create_tmp_session = session is None
-
     if create_tmp_session:
         session = get_session()
+
     genomes = session.query(Genome).filter(Genome.genome_name.in_(genome_names)).all()
     assert len(genomes) == len(genome_names)
-    if create_tmp_session:
-        session.close()
-
     if to_dict:
         return dict([(genome.genome_id, genome) for genome in genomes])
+
+    if create_tmp_session:
+        session.close()
     else:
         return genomes
 
 def load_cdss_by_genome_names(genome_names, session=None, to_dict=False):
     create_tmp_session = session is None
-
     if create_tmp_session:
         session = get_session()
+
     genomes = load_genomes(genome_names, session)
     genome_ids = [genome.genome_id for genome in genomes]
     cdss = session.query(Cds).filter(Cds.genome_id.in_(genome_ids)).all()
-    if create_tmp_session:
-        session.close()
-
     if to_dict:
         return dict([(cds.cds_id, cds) for cds in cdss])
+
+    if create_tmp_session:
+        session.close()
     else:
         return cdss
