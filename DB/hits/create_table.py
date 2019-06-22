@@ -26,10 +26,11 @@ def main(mmseqs_fp, hits_fp, error_fp):
     LOGGER.info("loaded {} refseq names".format(len(refseq2id)))
 
     mmseqs_df = read_mmseqs(mmseqs_fp)
+    LOGGER.info("loaded {} mmseqs hits".format(len(mmseqs_df)))
     mmseqs_df["hit_id"] = mmseqs_df.index.map(lambda x : HID.new())
     mmseqs_df["cds_id"] = mmseqs_df["qname"].map(cds2id)
     mmseqs_df["refseq_id"] = mmseqs_df["sname"].map(refseq2id)
-    mmseqs_df["coverage"] = mmseqs_df["qlength"] / mmseqs_df["length"]
+    mmseqs_df["coverage"] = mmseqs_df["length"] / mmseqs_df["qlength"]
 
     msk = (mmseqs_df["cds_id"]!=-1) & (mmseqs_df["refseq_id"]!=-1)
     hits_df = mmseqs_df[msk][["hit_id", "cds_id", "refseq_id", "length", "identity", "coverage"]]
@@ -44,7 +45,7 @@ def main(mmseqs_fp, hits_fp, error_fp):
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
                         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    mmseqs_fp = "/nfs_share/mitsuki/MicrobialDarkMatte/search/result_3.m8.head.best"
+    mmseqs_fp = "/nfs_share/mitsuki/MicrobialDarkMatter/search/result_3.m8.best"
     hits_fp = "./data/hits.tsv"
     error_fp = "./data/hits_error.tsv" # also output failed records for debuging
     main(mmseqs_fp, hits_fp, error_fp)
