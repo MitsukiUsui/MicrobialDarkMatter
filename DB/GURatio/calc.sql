@@ -77,21 +77,21 @@ SET
 --------------------------------------------------------------------------------
 -- clusters.cds_count, gk_count, fk_count
 --------------------------------------------------------------------------------
-UPDATE clusters
-SET
-    cds_count = (
-        SELECT COUNT(cds_id)
-        FROM cdss
-        WHERE cdss.cluster_id = clusters.cluster_id
-    ),
-    gk_count = (
-        SELECT SUM(gk)
-        FROM cdss
-        WHERE cdss.cluster_id = clusters.cluster_id
-    ),
-    fk_count = (
-        SELECT SUM(fk)
-        FROM cdss
-        WHERE cdss.cluster_id = clusters.cluster_id
-    )
-;
+--UPDATE clusters
+--SET
+--    cds_count = (
+--        SELECT COUNT(cds_id)
+--        FROM cdss
+--        WHERE cdss.cluster_id = clusters.cluster_id
+--    ),
+--    gk_count = (
+--        SELECT SUM(gk)
+--        FROM cdss
+--        WHERE cdss.cluster_id = clusters.cluster_id
+--    ),
+--    fk_count = (
+--        SELECT SUM(fk)
+--        FROM cdss
+--        WHERE cdss.cluster_id = clusters.cluster_id
+--    )
+--;

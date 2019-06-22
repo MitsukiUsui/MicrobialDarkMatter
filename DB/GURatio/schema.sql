@@ -10,6 +10,6 @@ ALTER TABLE genomes ADD COLUMN cds_count INTEGER;
 ALTER TABLE genomes ADD COLUMN gk_count INTEGER;
 ALTER TABLE genomes ADD COLUMN fk_count INTEGER;
 
-ALTER TABLE clusters ADD COLUMN cds_count INTEGER;
-ALTER TABLE clusters ADD COLUMN gk_count INTEGER;
-ALTER TABLE clusters ADD COLUMN fk_count INTEGER;
+--ALTER TABLE clusters ADD COLUMN cds_count INTEGER;
+--ALTER TABLE clusters ADD COLUMN gk_count INTEGER;
+--ALTER TABLE clusters ADD COLUMN fk_count INTEGER;
