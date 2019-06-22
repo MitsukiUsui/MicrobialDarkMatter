@@ -18,6 +18,7 @@ HID = IDManager("hits")
 
 
 def main(mmseqs_fp, hits_fp, error_fp):
+    LOGGER.info("Start extracting name2id from DB. Be patient...")
     con = get_connection()
     cds2id = load_name2id("cdss", default=-1, con=con)
     LOGGER.info("loaded {} cds names".format(len(cds2id)))
@@ -28,7 +29,7 @@ def main(mmseqs_fp, hits_fp, error_fp):
     mmseqs_df["hit_id"] = mmseqs_df.index.map(lambda x : HID.new())
     mmseqs_df["cds_id"] = mmseqs_df["qname"].map(cds2id)
     mmseqs_df["refseq_id"] = mmseqs_df["sname"].map(refseq2id)
-    mmseqs_df["coverage"] = mmseqs_df["length"] / mmseqs_df["qlength"]
+    mmseqs_df["coverage"] = mmseqs_df["qlength"] / mmseqs_df["length"]
 
     msk = (mmseqs_df["cds_id"]!=-1) & (mmseqs_df["refseq_id"]!=-1)
     hits_df = mmseqs_df[msk][["hit_id", "cds_id", "refseq_id", "length", "identity", "coverage"]]
@@ -43,7 +44,7 @@ def main(mmseqs_fp, hits_fp, error_fp):
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
                         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    mmseqs_fp = "/nfs_share/mitsuki/MicrobialDarkMatter/search/result_1.m8.head.best"
+    mmseqs_fp = "/nfs_share/mitsuki/MicrobialDarkMatte/search/result_3.m8.head.best"
     hits_fp = "./data/hits.tsv"
     error_fp = "./data/hits_error.tsv" # also output failed records for debuging
     main(mmseqs_fp, hits_fp, error_fp)

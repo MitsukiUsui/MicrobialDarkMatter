@@ -23,5 +23,5 @@ def build_local_filepath(genome_name, extension=None):
         return None
 
 def build_neighbor_filepath(clade_name):
-    local_direc = "{0}/{1}".format(NEIGHBOR_DIREC, genome_name)
+    local_direc = "{0}/{1}".format(NEIGHBOR_DIREC, clade_name)
     return local_direc

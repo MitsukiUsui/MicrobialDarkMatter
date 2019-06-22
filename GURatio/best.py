@@ -16,6 +16,6 @@ def main(mmseqs_fp, best_fp):
 	print("saved {}".format(best_fp))
 
 if __name__ == "__main__":
-	mmseqs_fp = "/nfs_share/mitsuki/MicrobialDarkMatter/search/result_1.m8"
+	mmseqs_fp = "/nfs_share/mitsuki/MicrobialDarkMatter/search/result_3.m8"
 	best_fp = mmseqs_fp + ".best"
 	main(mmseqs_fp, best_fp)
