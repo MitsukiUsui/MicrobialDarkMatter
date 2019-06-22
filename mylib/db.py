@@ -47,6 +47,33 @@ class IDManager:
         max_id = max_id if max_id else 0 # for cases when table has no record
         return max_id
 
+class CdsDAO:
+    def __init__(self, cdss):
+        self.cdss = cdss
+        self.id2idx = defaultdict(lambda: None)
+        self.name2idx = defaultdict(lambda: None)
+        self.gene2idxs = defaultdict(list)
+        for idx, cds in enumerate(self.cdss):
+            self.id2idx[cds.cds_id] = idx
+            self.name2idx[cds.cds_name] = idx
+            if hasattr(cds, "gene_name"):
+                self.gene2idxs[cds.gene_name].append(idx)
+
+    def get_cds_by_idx(self, idx):
+        if isinstance(idx, int) and idx >= 0 and idx < len(self.cdss):
+            return self.cdss[idx]
+        else:
+            return None
+
+    def get_cds_by_cds_id(self, cds_id):
+        return self.get_cds_by_idx(self.id2idx[cds_id])
+
+    def get_cds_by_cds_name(self, cds_name):
+        return self.get_cds_by_idx(self.name2idx[cds_name])
+
+    def get_cdss_by_gene_name(self, gene_name):
+        return list(map(lambda idx: self.get_cds_by_idx(idx), self.gene2idxs[gene_name]))
+
 def load_name2id(table_name, default=-1, con=None):
     assert table_name in ("projects", "genomes", "scaffolds", "cdss", "refseqs")
     create_tmp_con = con is None
@@ -65,33 +92,41 @@ def load_name2id(table_name, default=-1, con=None):
         con.close()
     return name2id
 
-def load_genomes(genome_names, session=None, to_dict=False):
+def load_genome_names_by_clade_name(clade_name, con=None):
+    create_tmp_con = con is None
+    if create_tmp_con:
+        con = get_connection()
+
+    con = get_connection()
+    query = "SELECT genome_name FROM clades WHERE clade_name='{}'".format(clade_name)
+    clades_df = pd.read_sql_query(query, con)
+    genome_names = list(clades_df["genome_name"])
+
+    if create_tmp_con:
+        con.close()
+    return genome_names
+
+def load_genomes_by_genome_names(genome_names, session=None):
     create_tmp_session = session is None
     if create_tmp_session:
         session = get_session()
 
     genomes = session.query(Genome).filter(Genome.genome_name.in_(genome_names)).all()
     assert len(genomes) == len(genome_names)
-    if to_dict:
-        return dict([(genome.genome_id, genome) for genome in genomes])
 
     if create_tmp_session:
         session.close()
-    else:
-        return genomes
+    return genomes
 
-def load_cdss_by_genome_names(genome_names, session=None, to_dict=False):
+def load_cdss_by_genome_names(genome_names, session=None):
     create_tmp_session = session is None
     if create_tmp_session:
         session = get_session()
 
-    genomes = load_genomes(genome_names, session)
+    genomes = load_genomes_by_genome_names(genome_names, session)
     genome_ids = [genome.genome_id for genome in genomes]
     cdss = session.query(Cds).filter(Cds.genome_id.in_(genome_ids)).all()
-    if to_dict:
-        return dict([(cds.cds_id, cds) for cds in cdss])
 
     if create_tmp_session:
         session.close()
-    else:
-        return cdss
+    return cdss
