@@ -74,6 +74,15 @@ class CdsDAO:
     def get_cdss_by_gene_name(self, gene_name):
         return list(map(lambda idx: self.get_cds_by_idx(idx), self.gene2idxs[gene_name]))
 
+    def get_neighbor_cds(self, origin_cds, offset):
+        neighbor_cds_id = origin_cds.cds_id + offset if origin_cds.strand == '+' else origin_cds.cds_id - offset
+        neighbor_cds = self.get_cds_by_cds_id(neighbor_cds_id)
+        if not(neighbor_cds is None) and neighbor_cds.scaffold_id == origin_cds.scaffold_id:
+            return neighbor_cds
+        else:
+            return None
+
+
 def load_name2id(table_name, default=-1, con=None):
     assert table_name in ("projects", "genomes", "scaffolds", "cdss", "refseqs")
     create_tmp_con = con is None

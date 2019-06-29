@@ -4,12 +4,8 @@ from logging import getLogger
 from collections import defaultdict, Counter
 
 import numpy as np
+import pandas as pd
 
-THRESH = {
-    "SCORE" : 0.8,
-    "SIZE" : 10,
-    "DIST" : 5
-}
 LOGGER = getLogger(__name__)
 
 
@@ -18,11 +14,13 @@ class MatrixPosition:
     store position in NeighborhoodMatrix (NxM)
     """
 
-    def __init__(self, i, j, offset, direction):
+    def __init__(self, i, j, offset, direction, cds_name, gene_name):
         self.i = i
         self.j = j
         self.offset = offset
         self.direction = direction
+        self.cds_name = cds_name
+        self.gene_name = gene_name
 
     def __lt__(self, other):
         assert self.i == other.i
@@ -30,6 +28,63 @@ class MatrixPosition:
 
     def __repr__(self):
         return "<MatrixPosition({},{})>".format(self.i, self.j)
+
+
+class NeighborhoodMatrix:
+    DIST = 5
+
+    def __init__(self, origin_gene_name, cdsDAO):
+        """
+        initialize the following data structures:
+
+        self.matrix: 2D matrix of MatrixPosition (HxW), where H = #origin-cdss and W = 2 * DIST + 1
+        self.gene2positions: key: gene_name, val: list of MatrixPosition
+        """
+
+        # initialize matrix & gene2positions
+        matrix = []
+        gene2positions = defaultdict(list)
+        for origin_cds in cdsDAO.get_cdss_by_gene_name(origin_gene_name):
+            row = []
+            for offset in range(-self.DIST, self.DIST+1):
+                neighbor_cds = cdsDAO.get_neighbor_cds(origin_cds, offset)
+                if neighbor_cds is None:
+                    pos = None
+                else:
+                    pos = MatrixPosition(len(matrix), len(row), offset,
+                                         direction = neighbor_cds.strand==origin_cds.strand,
+                                         cds_name = neighbor_cds.cds_name,
+                                         gene_name = neighbor_cds.gene_name)
+                    gene2positions[neighbor_cds.gene_name].append(pos)
+                row.append(pos)
+            assert len(row) == 2 * self.DIST + 1
+            matrix.append(row)
+
+        self.origin_gene_name = origin_gene_name
+        self.matrix = matrix
+        self.shape = (len(self.matrix), 2 * self.DIST + 1)
+        self.gene2positions = gene2positions
+
+    def __repr__(self):
+        return "<Matrix@{0}({1}x{2})>".format(self.origin_gene_name, self.shape[0], self.shape[1])
+
+    def get_count_by_offset(self, offset):
+        idx = offset + self.DIST
+        return sum([(row[idx] is not None) for row in self.matrix])
+
+    def get_positions_by_offset(self, offset):
+        idx = offset + self.DIST
+        return [row[idx] for row in self.matrix]
+
+    def get_positions_by_gene_name(self, gene_name):
+        return self.gene2positions[gene_name]
+
+    def get_neighbor_gene_names(self):
+        gene_name_set = set(self.gene2positions.keys())
+        gene_name_set.remove(self.origin_gene_name)
+        gene_name_set.remove(None) # default value for set_gene_name()
+        return gene_name_set
+
 
 def calc_bls(genome_names, tree):
     """
@@ -52,37 +107,6 @@ def calc_bls(genome_names, tree):
             bls += subtree.get_distance(parent, child)
             stack.append(child)
     return bls
-
-def is_neighborhood(cds1, cds2):
-    if cds1.scaffold_id != cds2.scaffold_id:
-        return False
-    if abs(cds1.cds_id - cds2.cds_id) > THRESH["DIST"]:
-        return False
-    return True
-
-def scan_neighborhoods(origin_gene_name, cdsDAO):
-    """
-    scan neighborhoods and create observation matrix and inverted indexes
-    """
-
-    origin_cdss = cdsDAO.get_cdss_by_gene_name(origin_gene_name)
-    H = len(origin_cdss)
-    W = THRESH["DIST"] * 2 + 1
-    obs_mat = np.zeros((H, W)).astype(bool) #initialize by False
-    gene2positions = defaultdict(list) #key: gene_name, val: list of neighborhood matrix positions
-
-    for i in range(H):
-        for j in range(W):
-            origin_cds = origin_cdss[i]
-            offset = j - THRESH["DIST"]
-            neighbor_cds_id = origin_cds_id + offset if origin_cds.strand == '+' else origin_cds_id - offset
-            neighbor_cds = cdsDAO.get_cds_by_cds_id(neighbor_cds_id)
-            if not(neighbor_cds is None) and is_neighborhood(origin_cds, neighbor_cds):
-                obs_mat[i][j] = True
-                if hasattr(neighbor_cds, "gene_name"):
-                    pos = MatrixPosition(i, j, offset, origin_cds.strand==neighbor_cds.strand)
-                    gene2positions[neighbor_cds.gene_name].append(pos)
-    return obs_mat, gene2positions
 
 def find_most_common_position(positions):
     def get_relationship(offset, direction):
@@ -108,7 +132,13 @@ def set_split(cdss, split_fp):
     return cdss
 
 def set_gene_name(cdss, ortho_fp):
-    # TODO
+    ortho_df = pd.read_csv(ortho_fp, sep='\t')
+    cds2gene = dict([(cds, gene) for cds, gene in zip(ortho_df["cds_name"], ortho_df["gene_name"])])
+    for cds in cdss:
+        if cds.cds_name in cds2gene:
+            cds.gene_name = cds2gene[cds.cds_name]
+        else:
+            cds.gene_name = None
     return cdss
 
 def output_neighbor_df(edge_df, out_fp):

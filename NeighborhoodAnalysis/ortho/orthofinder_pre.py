@@ -34,5 +34,6 @@ def main(clade_name):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
                             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    clade_name = "Enterobacterales"
+#    clade_name = "Enterobacterales"
+    clade_name = "MGII"
     main(clade_name)
