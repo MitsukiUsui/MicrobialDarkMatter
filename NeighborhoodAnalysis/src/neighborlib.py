@@ -108,25 +108,6 @@ def calc_bls(genome_names, tree):
             stack.append(child)
     return bls
 
-def find_most_common_position(positions):
-    def get_relationship(offset, direction):
-        if direction == True:
-            return "cooriented"
-        elif offset < 0:
-            return "divergent"
-        else:
-            return "convergent"
-
-    assert len(positions) > 0
-    c = Counter([(pos.offset, pos.direction) for pos in positions])
-    (offset, direction), count = c.most_common()[0]
-
-    return {
-        "top_offset": offset,
-        "top_relationship": get_relationship(offset, direction),
-        "top_ratio": count / len(positions)
-    }
-
 def set_split(cdss, split_fp):
     # TODO
     return cdss

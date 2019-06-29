@@ -4,32 +4,30 @@ import sys
 import pathlib
 import logging
 import argparse
-from collections import defaultdict
 
-import numpy as np
 import pandas as pd
 
 ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from neighborlib import scan_neighborhoods, set_gene_name, set_split, output_neighbor_df
+from neighborlib import NeighborhoodMatrix, set_gene_name, set_split, output_neighbor_df
 from scoring import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
 
 
 def detect_edges_target(origin_gene_name, neighbor_gene_names, score_method, cdsDAO):
-    obs_mat, gene2positions = scan_neighborhoods(origin_gene_name, cdsDAO)
+    matrix = NeighborhoodMatrix(origin_gene_name, cdsDAO)
     records = []
     for neighbor_gene_name in neighbor_gene_names:
         positions = gene2positions[neighbor_gene_name]
         if score_method == "naive":
-            score = score_naive(obs_mat, positions)
+            score = score_naive(neighbor_gene_name, matrix)
         elif score_method == "independent":
-            score = score_independent(obs_mat, positions)
+            score = score_independent(neighbor_gene_name, matrix)
         elif score_method == "conditional":
-            score = score_conditional(obs_mat, positions)
+            score = score_conditional(neighbor_gene_name, matrix)
         records.append({
             "x": origin_gene_name,
             "y": neighbor_gene_name,

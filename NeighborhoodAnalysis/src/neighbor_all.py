@@ -4,16 +4,14 @@ import sys
 import pathlib
 import logging
 import argparse
-from collections import defaultdict
 
-import numpy as np
 import pandas as pd
 
 ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from neighborlib import scan_neighborhoods, set_gene_name, set_split, output_neighbor_df
+from neighborlib import NeighborhoodMatrix, set_gene_name, set_split, output_neighbor_df
 from scoring import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
@@ -33,45 +31,37 @@ def find_most_common_position(positions):
     (offset, direc), freq = c.most_common()[0]
     relationship = get_relationship(offset, direc)
 
-    dct = {
+    return {
         "top_offset": offset,
         "top_relationship": relationship,
         "top_ratio": freq / len(positions)
     }
-    return dct
 
 
 def detect_edges_all(origin_gene_name, score_method, cdsDAO, tree=None):
-	obs_mat, gene2positions = scan_neighborhoods(origin_gene_name, cdsDAO)
+	matrix = NeighborhoodMatrix(origin_gene_name, cdsDAO)
 	records = []
-    for neighbor_gene_name, positions in sorted(gene2positions.items(), key=lambda x:x[0]):
-        if neighbor_gene_name == origin_gene_name:
-            continue
-
-        score_naive = scoring.score_naive(obs_mat, positions)
+    for neighbor_gene_name in sorted(matrix.get_neighbor_gene_names()):
         if score_method == "naive":
-            score = scoring.score_naive(obs_mat, positions)
+            score = score_naive(neighbor_gene_name, matrix)
         elif score_method == "independent":
-            score = scoring.score_independent(obs_mat, positions)
+            score = score_independent(neighbor_gene_name, matrix)
         elif score_method == "conditional":
-            score = scoring.score_conditional(obs_mat, positions)
+            score = score_conditional(neighbor_gene_name, matrix)
 
         if score >= THRESH["SCORE"]:
-            found_cds_ids = set([origin_cds_ids[pos.i] for pos in positions])
-            genome_names = set([cdss[cds_id].cds_name.split('-')[0] for cds_id in found_cds_ids])
-            bls = calc_bls(genome_names, tree) if tree else -1
-
-            records.append({
+            found_genome_names = map(matrix.get_positions_by_gene_name(neighbor_gene_name), lambda pos: pos.cds_name.split('-')[0]))
+            record = {
                 "x": origin_gene_name,
                 "y": neighbor_gene_name,
-                "total": len(origin_cds_ids),
-                "found": len(found_cds_ids),
                 "score": score,
-                "score_naive": score_naive,
-                "bls": bls,
-            })
-            dct.update(find_most_common_position(positions))
-            dct_lst.append(dct)
+                "score_naive": score_naive(neighbor_gene_name, matrix)
+                "total": matrix.shape[0],
+                "found": len(matrix.get_positions_by_gene_name(neighbor_gene_name))
+                "bls": calc_bls(found_genome_names, tree) if tree else -1,
+            }
+            record.update(find_most_common_position(positions))
+            records.append(record)
     return records
 
 
