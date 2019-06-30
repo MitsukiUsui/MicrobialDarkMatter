@@ -30,7 +30,6 @@ class MatrixPosition:
     def __repr__(self):
         return "<MatrixPosition({},{})>".format(self.i, self.j)
 
-
 class NeighborhoodMatrix:
     DIST = 5
 
@@ -39,47 +38,60 @@ class NeighborhoodMatrix:
         initialize the following data structures:
 
         self.matrix: 2D matrix of MatrixPosition (HxW), where H = #origin-cdss and W = 2 * DIST + 1
+        self.indicator_matrix: numpy 2D matrix (HxW), where -1 for missing, 0 for observed
+        self.offset2count: key: offset, val: observed count
+        self.offset2positions: key: offset, val: list of MatrixPosition and None
         self.gene2positions: key: gene_name, val: list of MatrixPosition
         """
 
-        # initialize matrix & gene2positions
+        self.origin_gene_name = origin_gene_name
+
+        # initialize matrix
+        origin_cdss = cdsDAO.get_cdss_by_gene_name(origin_gene_name)
         matrix = []
-        gene2positions = defaultdict(list)
-        for origin_cds in cdsDAO.get_cdss_by_gene_name(origin_gene_name):
+        for i, origin_cds in enumerate(cdsDAO.get_cdss_by_gene_name(origin_gene_name)):
             row = []
-            for offset in range(-self.DIST, self.DIST+1):
+            for j, offset in enumerate(range(-self.DIST, self.DIST+1)):
                 neighbor_cds = cdsDAO.get_neighbor_cds(origin_cds, offset)
                 if neighbor_cds is None:
                     pos = None
                 else:
-                    pos = MatrixPosition(len(matrix), len(row), offset,
+                    pos = MatrixPosition(i, j, offset,
                                          direction = neighbor_cds.strand==origin_cds.strand,
                                          origin_name = origin_cds.cds_name,
                                          cds_name = neighbor_cds.cds_name,
                                          gene_name = neighbor_cds.gene_name)
-                    gene2positions[neighbor_cds.gene_name].append(pos)
                 row.append(pos)
             assert len(row) == 2 * self.DIST + 1
             matrix.append(row)
-
-        self.origin_gene_name = origin_gene_name
         self.matrix = matrix
         self.shape = (len(self.matrix), 2 * self.DIST + 1)
-        self.gene2positions = gene2positions
+
+        # initialize index structures
+        self.indicator_matrix = -np.ones((self.shape[0], self.shape[1])).astype(float)
+        self.offset2count = defaultdict(lambda:0)
+        self.offset2positions = defaultdict(list)
+        self.gene2positions = defaultdict(list)
+        for i, row in enumerate(self.matrix):
+            for j, pos in enumerate(row):
+                offset = j - self.DIST
+                self.offset2positions[offset].append(pos)
+                if pos is not None:
+                    self.indicator_matrix[i][j] = 0
+                    self.offset2count[offset] += 1
+                    self.gene2positions[pos.gene_name].append(pos)
 
     def __repr__(self):
         return "<Matrix@{0}({1}x{2})>".format(self.origin_gene_name, self.shape[0], self.shape[1])
 
     def get_count_by_offset(self, offset):
-        idx = offset + self.DIST
-        return sum([(row[idx] is not None) for row in self.matrix])
+        return self.offset2count[offset]
 
     def get_positions_by_offset(self, offset, dropna=False):
-        idx = offset + self.DIST
         if dropna:
-            return [row[idx] for row in self.matrix if row[idx] is not None]
+            return list(filter(lambda pos: pos is not None, self.offset2positions[offset]))
         else:
-            return [row[idx] for row in self.matrix]
+            return self.offset2positions[offset]
 
     def get_positions_by_gene_name(self, gene_name):
         return self.gene2positions[gene_name]
@@ -90,6 +102,16 @@ class NeighborhoodMatrix:
         if None in gene_name_set:
             gene_name_set.remove(None) # default value for set_gene_name()
         return gene_name_set
+
+    def to_indicator_matrix(self, gene_name):
+        """
+        convert to indicator matrix, where 1 stands for target gene, 0 for other gene,and -1 for missing
+        """
+
+        ret = self.indicator_matrix.copy()
+        for pos in self.get_positions_by_gene_name(gene_name):
+            ret[pos.i][pos.j] = 1
+        return ret
 
 
 def calc_bls(genome_names, tree):

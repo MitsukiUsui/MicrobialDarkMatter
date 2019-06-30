@@ -49,11 +49,15 @@ def detect_edges_all(origin_gene_name, score_method, cdsDAO, tree=None):
     if matrix.shape[0] < THRESH["SIZE"]:
         LOGGER.debug("too small ortholog size = {}".format(matrix.shape[0]))
         return records
-    for neighbor_gene_name in sorted(matrix.get_neighbor_gene_names()):
+
+    neighbor_gene_names = sorted(matrix.get_neighbor_gene_names())
+    LOGGER.debug("found {} candidate neighbor genes".format(len(neighbor_gene_names)))
+    for neighbor_gene_name in neighbor_gene_names:
+        indicator_matrix = matrix.to_indicator_matrix(neighbor_gene_name)
         if score_method == "naive":
-            score = score_naive(neighbor_gene_name, matrix)
+            score = score_naive(indicator_matrix)
         elif score_method == "independent":
-            score = score_independent(neighbor_gene_name, matrix)
+            score = score_independent(indicator_matrix)
         elif score_method == "conditional":
             score = score_conditional(neighbor_gene_name, matrix)
 
@@ -65,7 +69,7 @@ def detect_edges_all(origin_gene_name, score_method, cdsDAO, tree=None):
                 "x": origin_gene_name,
                 "y": neighbor_gene_name,
                 "score": score,
-                "score_naive": score_naive(neighbor_gene_name, matrix),
+                "score_naive": score_naive(indicator_matrix),
                 "total": matrix.shape[0],
                 "found": len(found_origin_names),
                 "bls": calc_bls(found_genome_names, tree) if tree else -1
@@ -99,7 +103,7 @@ def main(args):
     records = []
     cdsDAO = CdsDAO(cdss)
     gene_names = sorted(set(ortho_df["gene_name"]))
-#    gene_names = list(gene_names)[:100]
+    gene_names = list(gene_names)[:100]
     LOGGER.info("found {} genes to search".format(len(gene_names)))
     for origin_gene_name in gene_names:
         LOGGER.info("start {}".format(origin_gene_name))

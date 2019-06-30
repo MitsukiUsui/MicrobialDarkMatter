@@ -1,21 +1,23 @@
 import numpy as np
 
-def score_naive(gene_name, matrix):
-    total = matrix.shape[0]
-    found = len(set(map(lambda pos:pos.i, matrix.get_positions_by_gene_name(gene_name))))
+def score_naive(indicator_matrix):
+    total = indicator_matrix.shape[0]
+    found = ((indicator_matrix==1).sum(axis=1) > 0).sum()
     if total > 0:
         return found / total
     else:
         return 0
 
-def score_independent(gene_name, matrix):
-    prod = 1
-    for offset in range(-matrix.DIST, matrix.DIST+1):
-        total = matrix.get_count_by_offset(offset)
-        if total > 0:
-            found = sum(map(lambda pos:pos.gene_name==gene_name, matrix.get_positions_by_offset(offset, dropna=True)))
-            prod *= 1 - found / total
-    return 1 - prod
+def score_independent(indicator_matrix):
+    total_arr = (indicator_matrix>=0).sum(axis=0)
+    found_arr = (indicator_matrix==1).sum(axis=0)
+    msk = total_arr > 0
+    if msk.sum() == 0:
+        return 0
+    else:
+        freq_arr = found_arr[msk] / total_arr[msk]
+        score = 1 - np.prod(1 - freq_arr)
+        return score
 
 def score_conditional(gene_name, matrix):
     def indicator(position, gene_name):
