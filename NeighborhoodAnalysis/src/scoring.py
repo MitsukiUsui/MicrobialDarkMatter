@@ -19,29 +19,22 @@ def score_independent(indicator_matrix):
         score = 1 - np.prod(1 - freq_arr)
         return score
 
-def score_conditional(gene_name, matrix):
-    def indicator(position, gene_name):
-        if position is None:
-            return -1.0
-        elif position.gene_name == gene_name:
-            return 1.0
-        else:
-            return 0.0
-
-    def caliculate_phat(target_vec, score_vec):
-        num = np.dot(target_vec==1, 1-score_vec)
-        den = np.dot(target_vec>=0, 1-score_vec)
+def score_conditional(indicator_matrix):
+    def caliculate_phat(target_arr, score_arr):
+        num = np.dot(target_arr==1, 1-score_arr)
+        den = np.dot(target_arr>=0, 1-score_arr)
         if den > 0:
             return num / den
         elif den == 0:
             return 0
 
-    score_vec = np.zeros(matrix.shape[0])
-    for offset in sorted(range(-matrix.DIST, matrix.DIST+1), key=lambda x: matrix.get_count_by_offset(x), reverse=True):
-        target_vec = np.array(map(matrix.get_positions_by_offset(offset), lambda x: indicator(x, gene_name)))
-        phat = caliculate_phat(target_vec, score_vec)
-        target_vec[target_vec==-1] = phat #fill missing value with estimated phat
-        score_vec += target_vec * (1 - score_vec)
-    score = np.mean(score_vec)
+    score_arr = np.zeros(indicator_matrix.shape[0])
+    total_arr = (indicator_matrix>=0).sum(axis=0)
+    for j in np.argsort(total_arr)[::-1]:
+        target_arr = indicator_matrix[:,j].copy()
+        phat = caliculate_phat(target_arr, score_arr)
+        target_arr[target_arr==-1] = phat #fill missing value with estimated phat
+        score_arr += target_arr * (1 - score_arr)
+    score = np.mean(score_arr)
     return score
 

@@ -12,4 +12,8 @@
 ./neighbor_all.py --clade_name Enterobacterales \
                      --score_method independent \
                      --out_fp tmp.neighbor
+
+./neighbor_all.py --clade_name Enterobacterales \
+                     --score_method conditional \
+                     --out_fp tmp.neighbor
 ```
