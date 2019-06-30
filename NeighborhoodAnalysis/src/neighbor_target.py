@@ -18,16 +18,16 @@ LOGGER = logging.getLogger(__name__)
 
 
 def detect_edges_target(origin_gene_name, neighbor_gene_names, score_method, cdsDAO):
-    matrix = NeighborhoodMatrix(origin_gene_name, cdsDAO)
+    neighbor_matrix = NeighborhoodMatrix(origin_gene_name, cdsDAO)
     records = []
     for neighbor_gene_name in neighbor_gene_names:
-        positions = gene2positions[neighbor_gene_name]
+        indicator_matrix = neighbor_matrix.to_indicator_matrix(neighbor_gene_name)
         if score_method == "naive":
-            score = score_naive(neighbor_gene_name, matrix)
+            score = score_naive(indicator_matrix)
         elif score_method == "independent":
-            score = score_independent(neighbor_gene_name, matrix)
+            score = score_independent(indicator_matrix)
         elif score_method == "conditional":
-            score = score_conditional(neighbor_gene_name, matrix)
+            score = score_conditional(indicator_matrix)
         records.append({
             "x": origin_gene_name,
             "y": neighbor_gene_name,
@@ -59,7 +59,7 @@ def main(args):
         records += detect_edges_target(origin_gene_name, neighbor_gene_names, args.score_method, cdsDAO)
 
     out_df = pd.DataFrame(records, columns=["x", "y", "score"])
-    out_df.to_csv(args.out_fp, sep='\t')
+    out_df.to_csv(args.out_fp, sep='\t', index=False)
     LOGGER.info("saved results to {}".format(args.out_fp))
 
 if __name__=="__main__":
