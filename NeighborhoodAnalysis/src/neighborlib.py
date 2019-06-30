@@ -14,11 +14,12 @@ class MatrixPosition:
     store position in NeighborhoodMatrix (NxM)
     """
 
-    def __init__(self, i, j, offset, direction, cds_name, gene_name):
+    def __init__(self, i, j, offset, direction, origin_name, cds_name, gene_name):
         self.i = i
         self.j = j
         self.offset = offset
         self.direction = direction
+        self.origin_name = origin_name
         self.cds_name = cds_name
         self.gene_name = gene_name
 
@@ -53,6 +54,7 @@ class NeighborhoodMatrix:
                 else:
                     pos = MatrixPosition(len(matrix), len(row), offset,
                                          direction = neighbor_cds.strand==origin_cds.strand,
+                                         origin_name = origin_cds.cds_name,
                                          cds_name = neighbor_cds.cds_name,
                                          gene_name = neighbor_cds.gene_name)
                     gene2positions[neighbor_cds.gene_name].append(pos)
@@ -72,9 +74,12 @@ class NeighborhoodMatrix:
         idx = offset + self.DIST
         return sum([(row[idx] is not None) for row in self.matrix])
 
-    def get_positions_by_offset(self, offset):
+    def get_positions_by_offset(self, offset, dropna=False):
         idx = offset + self.DIST
-        return [row[idx] for row in self.matrix]
+        if dropna:
+            return [row[idx] for row in self.matrix if row[idx] is not None]
+        else:
+            return [row[idx] for row in self.matrix]
 
     def get_positions_by_gene_name(self, gene_name):
         return self.gene2positions[gene_name]
@@ -82,7 +87,8 @@ class NeighborhoodMatrix:
     def get_neighbor_gene_names(self):
         gene_name_set = set(self.gene2positions.keys())
         gene_name_set.remove(self.origin_gene_name)
-        gene_name_set.remove(None) # default value for set_gene_name()
+        if None in gene_name_set:
+            gene_name_set.remove(None) # default value for set_gene_name()
         return gene_name_set
 
 
@@ -121,9 +127,3 @@ def set_gene_name(cdss, ortho_fp):
         else:
             cds.gene_name = None
     return cdss
-
-def output_neighbor_df(edge_df, out_fp):
-    with open(out_fp, 'w') as f:
-        comment = ';'.join(["{}={}".format(key,val) for key,val in THRESH.items()])
-        f.write("#{}\n".format(comment))
-        edge_df.to_csv(f, index=False)

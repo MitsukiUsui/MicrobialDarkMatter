@@ -11,7 +11,7 @@ ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from neighborlib import NeighborhoodMatrix, set_gene_name, set_split, output_neighbor_df
+from neighborlib import NeighborhoodMatrix, set_gene_name, set_split
 from scoring import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ def main(args):
         records += detect_edges_target(origin_gene_name, neighbor_gene_names, args.score_method, cdsDAO)
 
     out_df = pd.DataFrame(records, columns=["x", "y", "score"])
-    output_neighbor_df(out_df, args.out_fp)
+    out_df.to_csv(args.out_fp, sep='\t')
     LOGGER.info("saved results to {}".format(args.out_fp))
 
 if __name__=="__main__":

@@ -4,6 +4,7 @@ import sys
 import pathlib
 import logging
 import argparse
+from collections import Counter
 
 import pandas as pd
 
@@ -11,15 +12,18 @@ ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from neighborlib import NeighborhoodMatrix, set_gene_name, set_split, output_neighbor_df
+from neighborlib import NeighborhoodMatrix, set_gene_name, set_split
 from scoring import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
-
+THRESH = {
+    "SIZE": 10,
+    "SCORE": 0.8
+}
 
 def find_most_common_position(positions):
-    def get_relationship(offset, direc):
-        if direc == True:
+    def get_relationship(offset, direction):
+        if direction == True:
             return "cooriented"
         elif offset < 0:
             return "divergent"
@@ -27,9 +31,9 @@ def find_most_common_position(positions):
             return "convergent"
 
     assert len(positions) > 0
-    c = Counter([(pos.offset, pos.direc) for pos in positions])
-    (offset, direc), freq = c.most_common()[0]
-    relationship = get_relationship(offset, direc)
+    c = Counter([(pos.offset, pos.direction) for pos in positions])
+    (offset, direction), freq = c.most_common()[0]
+    relationship = get_relationship(offset, direction)
 
     return {
         "top_offset": offset,
@@ -39,8 +43,12 @@ def find_most_common_position(positions):
 
 
 def detect_edges_all(origin_gene_name, score_method, cdsDAO, tree=None):
-	matrix = NeighborhoodMatrix(origin_gene_name, cdsDAO)
-	records = []
+    matrix = NeighborhoodMatrix(origin_gene_name, cdsDAO)
+
+    records = []
+    if matrix.shape[0] < THRESH["SIZE"]:
+        LOGGER.debug("too small ortholog size = {}".format(matrix.shape[0]))
+        return records
     for neighbor_gene_name in sorted(matrix.get_neighbor_gene_names()):
         if score_method == "naive":
             score = score_naive(neighbor_gene_name, matrix)
@@ -50,78 +58,64 @@ def detect_edges_all(origin_gene_name, score_method, cdsDAO, tree=None):
             score = score_conditional(neighbor_gene_name, matrix)
 
         if score >= THRESH["SCORE"]:
-            found_genome_names = map(matrix.get_positions_by_gene_name(neighbor_gene_name), lambda pos: pos.cds_name.split('-')[0]))
+            positions = matrix.get_positions_by_gene_name(neighbor_gene_name)
+            found_origin_names = set(map(lambda pos: pos.origin_name, positions))
+            found_genome_names = set(map(lambda pos: pos.origin_name.split('-')[0], positions))
             record = {
                 "x": origin_gene_name,
                 "y": neighbor_gene_name,
                 "score": score,
-                "score_naive": score_naive(neighbor_gene_name, matrix)
+                "score_naive": score_naive(neighbor_gene_name, matrix),
                 "total": matrix.shape[0],
-                "found": len(matrix.get_positions_by_gene_name(neighbor_gene_name))
-                "bls": calc_bls(found_genome_names, tree) if tree else -1,
+                "found": len(found_origin_names),
+                "bls": calc_bls(found_genome_names, tree) if tree else -1
             }
             record.update(find_most_common_position(positions))
             records.append(record)
+    LOGGER.debug("found {} records".format(len(records)))
     return records
 
 
 def main(args):
-    LOGGER.info("Gene Neighborhood with Missing data (GNM) Scoring module")
-
-    #load genomes & cdss from SQLite Database
-    genome_names = [line.strip() for line in open(args.genome_fp, 'r')]
-    genomes = load_genomes(genome_names)
-    LOGGER.info("loaded {} genomes".format(len(genomes)))
-    cdss = load_cdss(genomes, to_dict=True)
+    genome_names = load_genome_names_by_clade_name(args.clade_name)
+    LOGGER.info("loaded {} {} genomes".format(len(genome_names), args.clade_name))
+    cdss = load_cdss_by_genome_names(genome_names)
     LOGGER.info("loaded {} cdss".format(len(cdss)))
 
-    # load and set orthology info
-    ortho_df = pd.read_csv(args.ortho_fp)
-    cds2id = dict([(cds.cds_name, cds.cds_id) for cds in cdss.values()]) #key: cds_name, val: cds_id
-    ortho_df["cds_id"] = ortho_df["cds_name"].map(lambda x:cds2id[x])
-    gene2ids = defaultdict(list) #key: gene_name, val: list of cds_ids
-    for gene_name, cds_id in zip(ortho_df["gene_name"], ortho_df["cds_id"]):
-        gene2ids[gene_name].append(cds_id)
-        cdss[cds_id].gene_name = gene_name #remember some cdss lack .gene_name attribute
-    LOGGER.info("loaded orthology from {}".format(args.ortho_fp))
+    ortho_fp = pathlib.Path(build_clade_filepath(args.clade_name)).joinpath("./ortho/{}.ortho".format(args.clade_name))
+    ortho_df = pd.read_csv(ortho_fp, sep='\t')
+    cdss = set_gene_name(cdss, ortho_fp)
+    LOGGER.info("loaded orthology from {}".format(ortho_fp))
 
-    #read tree for bls calculation
-    if args.tree_fp:
-        tree = PhyloTree(args.tree_fp, format=1)
-        LOGGER.info("loaded phylogenetic tree from {}".format(args.tree_fp))
-    else:
-        tree = None
-
-    #split
     if args.split_fp:
         cdss = set_split(cdss, args.split_fp)
         LOGGER.info("loaded simulated segmentation from {}".format(args.split_fp))
 
-    #search edges one by one
-    edges = []
-#    gene_names = sorted(set(ortho_df["gene_name"]))
-    gene_names = ["OG{:07}".format(i) for i in (1105, 1130, 1161, 1162, 1211, 1226, 994)]
+    tree = None
+    if args.tree_fp:
+        tree = PhyloTree(args.tree_fp, format=1)
+        LOGGER.info("loaded phylogenetic tree from {}".format(args.tree_fp))
+
+    records = []
+    cdsDAO = CdsDAO(cdss)
+    gene_names = sorted(set(ortho_df["gene_name"]))
+#    gene_names = list(gene_names)[:100]
     LOGGER.info("found {} genes to search".format(len(gene_names)))
-    for gene_name in gene_names:
-        LOGGER.info("start {}".format(gene_name))
-        edges_ = search_edges(args.score_method, gene_name, gene2ids[gene_name], cdss, tree)
-        LOGGER.info("found {} edges".format(len(edges_)))
-        edges += edges_
+    for origin_gene_name in gene_names:
+        LOGGER.info("start {}".format(origin_gene_name))
+        records += detect_edges_all(origin_gene_name, args.score_method, cdsDAO, tree)
 
-    #output edges as DataFrame with comments
-    edge_df = pd.DataFrame(edges)
-    edge_df = edge_df[["x", "y", "total", "found", "score", "score_naive", "bls", "top_offset", "top_relationship", "top_ratio"]]
-    output_edge_df(edge_df, args.out_fp)
-    LOGGER.info("DONE: output {}".format(args.out_fp))
-
+    out_df = pd.DataFrame(records)
+    out_df = out_df[["x", "y", "score", "score_naive", "total", "found", "bls", "top_offset", "top_relationship", "top_ratio"]]
+    out_df.to_csv(args.out_fp, sep='\t', index=False)
+    LOGGER.info("saved results to {}".format(args.out_fp))
 
 if __name__=="__main__":
-	logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
+    logging.basicConfig(level=logging.DEBUG, datefmt="%m/%d/%Y %I:%M:%S",
                             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     parser = argparse.ArgumentParser()
     parser.add_argument("--clade_name", required=True, help="clade_name")
     parser.add_argument("--score_method", required=True, choices=["naive", "independent", "conditional"])
-    parser.add_argument("--neighbor_fp", required=True, help=".neighbor to follow")
     parser.add_argument("--out_fp", required=True)
     parser.add_argument("--split_fp", help="simulated segment map")
     parser.add_argument("--tree_fp", help="newick tree")
