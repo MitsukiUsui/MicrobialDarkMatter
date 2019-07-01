@@ -12,7 +12,7 @@ sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
 from neighborlib import NeighborhoodMatrix, set_gene_name, set_split
-from scoring import score_naive, score_independent, score_conditional
+from scorelib import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
 

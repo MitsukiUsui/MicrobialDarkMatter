@@ -11,7 +11,7 @@ import pandas as pd
 ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import load_genome_names_by_clade_name, load_cdss_by_genome_names
-from splitlib import SegmentManager, Cwf
+from splitlib import SegmentManager, Wcf
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,14 +30,12 @@ def fit(segment_manager, wcf_model):
     update sement manager to follow model_wcf
     """
 
-    total_member_count = segment_manager.get_total_member_count()
+    total_member_count = segment_manager.get_member_count()
     used_member_count = 0
     for size in reversed(6, segment_manager.get_max_segment_size()): # split segments in descending order
         segment_ids = segment_manager.get_segments_by_size(size)
-        if size > len(wcf_model):
-            available_member_count = 0
-        else:
-            available_member_count = max(0, total_member_count * (1 - wcf_model[size-1]) - used_member_count)
+        available_member_count = total_member_count * (1 - wcf_model[size-1]) - used_member_count
+        assert available_member_count >= 0
         keep_segment_count = math.floor(available_member_count / size)
         split_segment_count = len(segment_ids) - keep_segment_count
 
@@ -55,7 +53,7 @@ def main(clade_name, model_fp, split_fp):
     LOGGER.info("loaded {} cdss".format(len(cdss)))
 
     model_df = pd.read_csv(model_fp, names=["x","y"])
-    wcf_model = calc_wcf(model_df["x"], model_df["y"])
+    wcf_model = Wcf(model_df["x"], model_df["y"])
     LOGGER.info("loaded model distribution from {}".format(model_fp))
 
     segment_manager = SegmentManager()
@@ -67,9 +65,9 @@ def main(clade_name, model_fp, split_fp):
     assert len(segment_manager) == len(scaffold2members)
     LOGGER.info("initialized segment manager with {} segments".format(len(segment_manager)))
 
-    wcf_before = segment_manager.get_wcf()
+    wcf_before = segment_manager.to_wcf()
     segment_manager = fit(segment_manager, wcf_model)
-    wcf_after = segment_manager.get_wcf()
+    wcf_after = segment_manager.to_wcf()
     LOGGER.info("updated sement manager to {} segments. Fitting loss = {}".format(len(segment_manager), calc_loss(wcf_model, wcf_after))
 
     scaffold_df = pd.DataFrame(map(lambda cds: {"cds_id":cds.cds_id, "scaffold_id":cds.scaffold_id}), cdss)

@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
+
+import pandas as pd
+from scipy import stats
+
 class SegmentManager:
     def __init__(self):
         self.next_id = 0
         self.segment2members = dict() #key: segment_id, val: list of members
         self.size2segments = defaultdict(set) #key: size, val: set of segment_ids of the size
-        self.total_member_count = 0
+        self.member_count = 0
 
     def __len__(self):
         return len(self.segment2members)
@@ -16,14 +21,14 @@ class SegmentManager:
         self.next_id += 1
         self.segment2members[segment_id] = members
         self.size2segments[size].add(segment_id)
-        self.total_member_count += size
+        self.member_count += size
         return segment_id
 
     def delete(self, segment_id):
         size = len(self.segment2members[segment_id])
         del self.segment2members[segment_id]
         self.size2segments[size].remove(segment_id)
-        self.total_member_count -= size
+        self.member_count -= size
 
     def split(self, segment_id, idx):
         members = self.get_members_by_id(segment_id)
@@ -40,8 +45,11 @@ class SegmentManager:
     def get_max_segment_size(self):
         return max(self.size2segments.keys())
 
-    def get_total_member_count(self):
-        return self.total_member_count
+    def get_segment_count(self):
+        return len(self.segment2members)
+
+    def get_member_count(self):
+        return self.member_count
 
     def to_wcf(self):
         x = []
@@ -60,8 +68,23 @@ class SegmentManager:
         records = []
         for segment_id, members in self.segment2members.items():
             records += [{"segment_id": segment_id, "member": m} for m in members]
-        df = pd.DataFrame(records, names=["segment_id", "member"])
+        df = pd.DataFrame(records, columns=["segment_id", "member"])
         return df
+
+if __name__ == "__main__":
+    segment_manager = SegmentManager()
+    member1 = [1, 2, 3]
+    member2 = [5, 6]
+    assert segment_manager.get_member_count() == 0 and segment_manager.get_segment_count() == 0
+    segment_id1 = segment_manager.add(member1)
+    assert segment_manager.get_member_count() == 3 and segment_manager.get_segment_count() == 1
+    segment_id2 = segment_manager.add(member2)
+    assert segment_manager.get_member_count() == 5 and segment_manager.get_segment_count() == 2
+    segment_manager.delete(segment_id1)
+    assert segment_manager.get_member_count() == 2 and segment_manager.get_segment_count() == 1
+    segment_manager.split(segment_id2, 1)
+    assert segment_manager.get_member_count() == 2 and segment_manager.get_segment_count() == 2
+    print("passed SegmentManager test")
 
 class Wcf:
     """
@@ -73,10 +96,20 @@ class Wcf:
         res = stats.cumfreq(x, numbins=max(x)+1, defaultreallimits=(0, max(x)+1), weights=weights)
         self.wcf = res.cumcount / res.cumcount[-1]
 
-    def __getitem__(self, key)
+    def __getitem__(self, key):
         if key < len(self.wcf):
             return self.wcf[key]
         else:
             return 1.0
 
-
+if __name__ == "__main__":
+    x = [1, 2, 4]
+    y = [4, 1, 1]
+    wcf = Wcf(x, y)
+    assert wcf[0] == 0.0
+    assert wcf[1] == 0.4
+    assert wcf[2] == 0.6
+    assert wcf[3] == 0.6
+    assert wcf[4] == 1.0
+    assert wcf[5] == 1.0
+    print("passed Wcf test")
