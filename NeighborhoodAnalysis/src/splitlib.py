@@ -87,3 +87,9 @@ class Wcf:
             return self.wcf[key]
         else:
             return 1.0
+
+    def __len__(self):
+        return len(self.wcf)
+
+    def to_array(self):
+        return self.wcf
