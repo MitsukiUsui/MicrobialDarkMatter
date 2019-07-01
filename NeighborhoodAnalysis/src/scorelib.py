@@ -37,4 +37,3 @@ def score_conditional(indicator_matrix):
         score_arr += target_arr * (1 - score_arr)
     score = np.mean(score_arr)
     return score
-

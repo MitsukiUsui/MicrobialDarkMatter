@@ -113,7 +113,6 @@ class NeighborhoodMatrix:
             ret[pos.i][pos.j] = 1
         return ret
 
-
 def calc_bls(genome_names, tree):
     """
     calculate sum of branch length covered by a subset of leafs

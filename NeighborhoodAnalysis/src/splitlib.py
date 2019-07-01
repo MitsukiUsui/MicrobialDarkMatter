@@ -33,8 +33,9 @@ class SegmentManager:
     def split(self, segment_id, idx):
         members = self.get_members_by_id(segment_id)
         self.delete(segment_id)
-        self.add(members[:idx])
-        self.add(members[idx:])
+        segment_id1 = self.add(members[:idx])
+        segment_id2 = self.add(members[idx:])
+        return segment_id1, segment_id2
 
     def get_members_by_id(self, segment_id):
         return self.segment2members[segment_id]
@@ -71,21 +72,6 @@ class SegmentManager:
         df = pd.DataFrame(records, columns=["segment_id", "member"])
         return df
 
-if __name__ == "__main__":
-    segment_manager = SegmentManager()
-    member1 = [1, 2, 3]
-    member2 = [5, 6]
-    assert segment_manager.get_member_count() == 0 and segment_manager.get_segment_count() == 0
-    segment_id1 = segment_manager.add(member1)
-    assert segment_manager.get_member_count() == 3 and segment_manager.get_segment_count() == 1
-    segment_id2 = segment_manager.add(member2)
-    assert segment_manager.get_member_count() == 5 and segment_manager.get_segment_count() == 2
-    segment_manager.delete(segment_id1)
-    assert segment_manager.get_member_count() == 2 and segment_manager.get_segment_count() == 1
-    segment_manager.split(segment_id2, 1)
-    assert segment_manager.get_member_count() == 2 and segment_manager.get_segment_count() == 2
-    print("passed SegmentManager test")
-
 class Wcf:
     """
     weighted cumlative frequencies
@@ -101,15 +87,3 @@ class Wcf:
             return self.wcf[key]
         else:
             return 1.0
-
-if __name__ == "__main__":
-    x = [1, 2, 4]
-    y = [4, 1, 1]
-    wcf = Wcf(x, y)
-    assert wcf[0] == 0.0
-    assert wcf[1] == 0.4
-    assert wcf[2] == 0.6
-    assert wcf[3] == 0.6
-    assert wcf[4] == 1.0
-    assert wcf[5] == 1.0
-    print("passed Wcf test")
