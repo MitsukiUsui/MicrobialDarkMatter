@@ -18,5 +18,5 @@ gff_fp=${5}
              -o ${gff_fp} -f gff
 
     # assign cds_name to attributes in .gff
-    ./prodigal_post.py ${genome_name} ${gff_fp} ${gff_fp}
+    ./prodigal_post.py ${gff_fp} ${gff_fp}
 #fi

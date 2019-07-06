@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from logging import getLogger
-from collections import defaultdict, Counter
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -47,7 +47,6 @@ class NeighborhoodMatrix:
         self.origin_gene_name = origin_gene_name
 
         # initialize matrix
-        origin_cdss = cdsDAO.get_cdss_by_gene_name(origin_gene_name)
         matrix = []
         for i, origin_cds in enumerate(cdsDAO.get_cdss_by_gene_name(origin_gene_name)):
             row = []

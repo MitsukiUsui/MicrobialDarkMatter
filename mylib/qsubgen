@@ -17,6 +17,7 @@ class TemplateParams(dict):
         """
         return '{' + key + '}'
 
+
 def main(script_fp, arg_fp, template_fp, qsub_fp):
     # Parse argument information
     arg_df = pd.read_csv(arg_fp, sep='\t', header=None)
@@ -29,8 +30,8 @@ def main(script_fp, arg_fp, template_fp, qsub_fp):
     params = TemplateParams({
         "job_name": script_fp.stem,
         "script": "./" + script_fp.name,
-        "arguments": ' '.join(["${}".format(i) for i in range(1, arg_len+1)]),
-        "script_fp" : script_fp,
+        "arguments": ' '.join(["${}".format(i) for i in range(1, arg_len + 1)]),
+        "script_fp": script_fp,
         "arg_fp": arg_fp,
         "datetime": datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     })
@@ -46,6 +47,7 @@ def main(script_fp, arg_fp, template_fp, qsub_fp):
     logger.info("execute the following array job command:")
     cmd = "qsub -t 1-{} -tc 16 {} {}".format(arg_cnt, qsub_fp, arg_fp)
     print(cmd)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, datefmt="%m/%d/%Y %I:%M:%S",

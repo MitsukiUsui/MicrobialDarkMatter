@@ -11,7 +11,6 @@ from tqdm import tqdm
 
 ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
-import mylib
 from mylib.db import Project, Genome, Scaffold, Cds
 from mylib.db import IDManager
 from mylib.path import build_local_filepath
@@ -28,12 +27,13 @@ def load_scaffolds(fna_fp):
     scaffolds = []
     for record in SeqIO.parse(fna_fp, 'fasta'):
         scaffolds.append(Scaffold(
-            scaffold_id = SID.new(),
-            genome_id = GID.get(),
-            scaffold_name = record.id,
-            length = len(record)
+            scaffold_id=SID.new(),
+            genome_id=GID.get(),
+            scaffold_name=record.id,
+            length=len(record)
         ))
     return scaffolds
+
 
 def load_scaffolds_faster(gff_fp):
     scaffolds = []
@@ -43,33 +43,36 @@ def load_scaffolds_faster(gff_fp):
             m = re.match(pattern, line)
             if m is not None:
                 scaffolds.append(Scaffold(
-                    scaffold_id = SID.new(),
-                    genome_id = GID.get(),
-                    scaffold_name = m.group(2).split()[0],
-                    length = int(m.group(1))
+                    scaffold_id=SID.new(),
+                    genome_id=GID.get(),
+                    scaffold_name=m.group(2).split()[0],
+                    length=int(m.group(1))
                 ))
     return scaffolds
+
 
 def load_cdss(gff_fp, scaffold2id):
     cdss = []
     for record in parse_gff(gff_fp):
         if record.type == "CDS":
             cdss.append(Cds(
-                cds_id = CID.new(),
-                genome_id = GID.get(),
-                scaffold_id = scaffold2id[record.seqid],
-                cds_name = record.attributes["cds_name"],
-                start = record.start,
-                end = record.end,
-                length = record.end - record.start + 1,
-                strand = record.strand
+                cds_id=CID.new(),
+                genome_id=GID.get(),
+                scaffold_id=scaffold2id[record.seqid],
+                cds_name=record.attributes["cds_name"],
+                start=record.start,
+                end=record.end,
+                length=record.end - record.start + 1,
+                strand=record.strand
             ))
     return cdss
+
 
 def append_records(records, out_fp):
     with open(out_fp, 'a') as f:
         for record in records:
             f.write('{}\n'.format(record))
+
 
 def main(arg_fp, projects_fp, genomes_fp, scaffolds_fp, cdss_fp):
     arg_df = pd.read_csv(arg_fp, sep='\t', comment='#')
@@ -101,7 +104,7 @@ def main(arg_fp, projects_fp, genomes_fp, scaffolds_fp, cdss_fp):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
-                            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     arg_fp = "./arg/create_tables.arg"
     projects_fp = "./data/projects.tsv"
     genomes_fp = "./data/genomes.tsv"

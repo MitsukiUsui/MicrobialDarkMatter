@@ -24,9 +24,10 @@ def main(genome_name, in_fp, out_fp):
         SeqIO.write(records, f, "fasta")
     LOGGER.info("saved renamed records to {}".format(out_fp))
 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, datefmt="%m/%d/%Y %I:%M:%S",
-                                format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     genome_name = sys.argv[1]
     in_fp = sys.argv[2]
     out_fp = sys.argv[3]

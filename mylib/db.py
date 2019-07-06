@@ -8,8 +8,7 @@ import pandas as pd
 from . import path
 sys.path.append(path.DB_LIB_DIREC)
 from myschema import Project, Genome, Scaffold, Cds
-
-DB_PATH=path.DB_PATH
+DB_PATH = path.DB_PATH
 
 
 def get_session(fp=None):
@@ -17,14 +16,17 @@ def get_session(fp=None):
     Session = sessionmaker(bind=engine)
     return Session()
 
+
 def get_connection(fp=None):
     engine = create_engine('sqlite:///{}'.format(fp if fp else DB_PATH))
     return engine.connect()
+
 
 class IDManager:
     """
     SQLITE3 ID Management utility class
     """
+
     def __init__(self, table_name):
         assert table_name in ("projects", "genomes", "scaffolds", "cdss", "hits", "refseqs")
         self.con = get_connection()
@@ -44,8 +46,9 @@ class IDManager:
     def _query_max_id(self):
         query = "SELECT MAX({}_id) from {};".format(self.table_name[:-1], self.table_name)
         max_id = self.con.execute(query).fetchone()[0]
-        max_id = max_id if max_id else 0 # for cases when table has no record
+        max_id = max_id if max_id else 0  # for cases when table has no record
         return max_id
+
 
 class CdsDAO:
     def __init__(self, cdss):
@@ -60,7 +63,7 @@ class CdsDAO:
                 self.gene2idxs[cds.gene_name].append(idx)
 
     def get_cds_by_idx(self, idx):
-        if isinstance(idx, int) and idx >= 0 and idx < len(self.cdss):
+        if isinstance(idx, int) and 0 <= idx < len(self.cdss):
             return self.cdss[idx]
         else:
             return None
@@ -77,7 +80,7 @@ class CdsDAO:
     def get_neighbor_cds(self, origin_cds, offset):
         neighbor_cds_id = origin_cds.cds_id + offset if origin_cds.strand == '+' else origin_cds.cds_id - offset
         neighbor_cds = self.get_cds_by_cds_id(neighbor_cds_id)
-        if not(neighbor_cds is None) and neighbor_cds.scaffold_id == origin_cds.scaffold_id:
+        if neighbor_cds is not None and neighbor_cds.scaffold_id == origin_cds.scaffold_id:
             return neighbor_cds
         else:
             return None
@@ -101,12 +104,12 @@ def load_name2id(table_name, default=-1, con=None):
         con.close()
     return name2id
 
+
 def load_genome_names_by_clade_name(clade_name, con=None):
     create_tmp_con = con is None
     if create_tmp_con:
         con = get_connection()
 
-    con = get_connection()
     query = "SELECT genome_name FROM clades WHERE clade_name='{}'".format(clade_name)
     clades_df = pd.read_sql_query(query, con)
     genome_names = list(clades_df["genome_name"])
@@ -114,6 +117,7 @@ def load_genome_names_by_clade_name(clade_name, con=None):
     if create_tmp_con:
         con.close()
     return genome_names
+
 
 def load_genomes_by_genome_names(genome_names, session=None):
     create_tmp_session = session is None
@@ -126,6 +130,7 @@ def load_genomes_by_genome_names(genome_names, session=None):
     if create_tmp_session:
         session.close()
     return genomes
+
 
 def load_cdss_by_genome_names(genome_names, session=None):
     create_tmp_session = session is None

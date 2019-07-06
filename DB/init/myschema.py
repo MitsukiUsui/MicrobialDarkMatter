@@ -1,4 +1,3 @@
-from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -20,6 +19,7 @@ class Project(Base):
     def __repr__(self):
         return "<Project(name={})>".format(self.project_name)
 
+
 class Genome(Base):
     __tablename__ = "genomes"
     genome_id = Column(Integer, primary_key=True)
@@ -36,6 +36,7 @@ class Genome(Base):
 
     def __repr__(self):
         return "<Genome(name={})>".format(self.genome_name)
+
 
 class Scaffold(Base):
     __tablename__ = "scaffolds"
@@ -55,6 +56,7 @@ class Scaffold(Base):
 
     def __repr__(self):
         return "<Scaffold(name={})>".format(self.scaffold_name)
+
 
 class Cds(Base):
     __tablename__ = "cdss"
@@ -79,7 +81,7 @@ class Cds(Base):
 
     def __str__(self):
         return '\t'.join(map(str, [self.cds_id, self.genome_id, self.scaffold_id, self.cds_name,
-                                    self.start, self.end, self.length, self.strand]))
+                                   self.start, self.end, self.length, self.strand]))
 
     def __repr__(self):
         return "<Cds(name={})>".format(self.cds_name)

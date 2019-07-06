@@ -3,8 +3,8 @@ from logging import getLogger
 
 from . import path
 
-GENBANK_PATH=path.GENBANK_PATH
-REFSEQ_PATH=path.REFSEQ_PATH
+GENBANK_PATH = path.GENBANK_PATH
+REFSEQ_PATH = path.REFSEQ_PATH
 logger = getLogger(__name__)
 genbankDAO = None
 refseqDAO = None
@@ -20,7 +20,7 @@ class AssemblySummaryDAO:
         return accession in self.acc2ftp
 
     def build_ftp_filepath(self, accession, extension=None):
-        possible_extension_set = set(["fna", "faa"])
+        possible_extension_set = {"fna", "faa"}
 
         # error handling
         if accession not in self.acc2ftp:
@@ -34,9 +34,9 @@ class AssemblySummaryDAO:
         if extension is None:
             ftp_path = ftp_direc
         if extension == "fna":
-            ftp_path  = "{}/{}_genomic.fna.gz".format(ftp_direc, ftp_direc.split('/')[-1])
+            ftp_path = "{}/{}_genomic.fna.gz".format(ftp_direc, ftp_direc.split('/')[-1])
         elif extension == "faa":
-            ftp_path  = "{}/{}_protein.faa.gz".format(ftp_direc, ftp_direc.split('/')[-1])
+            ftp_path = "{}/{}_protein.faa.gz".format(ftp_direc, ftp_direc.split('/')[-1])
         return ftp_path
 
 
@@ -51,6 +51,7 @@ def build_ftp_filepath(accession, extension=None):
     else:
         logger.debug("accession={} not found".format(accession))
         return None
+
 
 def __load():
     global genbankDAO

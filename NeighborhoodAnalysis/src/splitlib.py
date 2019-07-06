@@ -5,6 +5,7 @@ from collections import defaultdict
 import pandas as pd
 from scipy import stats
 
+
 class SegmentManager:
     def __init__(self):
         self.next_id = 0
@@ -64,7 +65,7 @@ class SegmentManager:
 
     def to_df(self):
         if len(self.segment2members) == 0:
-            return pd.DataFrame(names=["segment_id", "member"])
+            return pd.DataFrame(columns=["segment_id", "member"])
 
         records = []
         for segment_id, members in self.segment2members.items():

@@ -7,6 +7,7 @@ import argparse
 from collections import Counter
 
 import pandas as pd
+from ete3 import PhyloTree
 
 ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
@@ -20,6 +21,7 @@ THRESH = {
     "SIZE": 10,
     "SCORE": 0.8
 }
+
 
 def find_most_common_position(positions):
     def get_relationship(offset, direction):
@@ -79,6 +81,7 @@ def detect_edges_all(origin_gene_name, score_method, cdsDAO, tree=None):
     LOGGER.info("found {} records".format(len(records)))
     return records
 
+
 def main(args):
     genome_names = load_genome_names_by_clade_name(args.clade_name)
     LOGGER.info("loaded {} {} genomes".format(len(genome_names), args.clade_name))
@@ -102,7 +105,7 @@ def main(args):
     records = []
     cdsDAO = CdsDAO(cdss)
     gene_names = sorted(set(ortho_df["gene_name"]))
-#    gene_names = list(gene_names)[:100]
+    #    gene_names = list(gene_names)[:100]
     LOGGER.info("found {} genes to search".format(len(gene_names)))
     for origin_gene_name in gene_names:
         LOGGER.info("start {}".format(origin_gene_name))
@@ -113,9 +116,10 @@ def main(args):
     out_df.to_csv(args.out_fp, sep='\t', index=False)
     LOGGER.info("saved results to {}".format(args.out_fp))
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
-                            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     parser = argparse.ArgumentParser()
     parser.add_argument("--clade_name", required=True, help="clade_name")
     parser.add_argument("--score_method", required=True, choices=["naive", "independent", "conditional"])

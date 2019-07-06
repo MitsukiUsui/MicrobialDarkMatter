@@ -1,4 +1,5 @@
 from logging import getLogger
+
 logger = getLogger(__name__)
 
 
@@ -20,23 +21,25 @@ class GffRecord:
 
     def __str__(self):
         return "\t".join([self.seqid, self.source, self.type, str(self.start), str(self.end), str(self.score),
-                                     self.strand, self.phase, self.encode_attributes(self.attributes)])
+                          self.strand, self.phase, self.encode_attributes(self.attributes)])
 
     def __repr__(self):
         return "<GffRecord({} {}:{})>".format(self.seqid, self.start, self.end)
 
-    def decode_attributes(self, text):
+    @staticmethod
+    def decode_attributes(text):
         atts = {}
         for subtext in text.split(';'):
-                if len(subtext) > 0:
-                    try:
-                        key, val = subtext.split('=')
-                        atts[key] = val
-                    except ValueError as err:
-                        logger.debug("found unparsable attribute subtext {}".format(subtext))
+            if len(subtext) > 0:
+                try:
+                    key, val = subtext.split('=')
+                    atts[key] = val
+                except ValueError as e:
+                    logger.debug("found unparsable attribute subtext {}".format(subtext), e)
         return atts
 
-    def encode_attributes(self, atts):
+    @staticmethod
+    def encode_attributes(atts):
         text = ""
         for key, val in atts.items():
             text += "{}={};".format(key, val)
