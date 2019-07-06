@@ -15,11 +15,9 @@ def build_local_filepath(genome_name, extension=None):
     local_direc = "{0}/{1}".format(GENOME_DIREC, genome_name)
     if extension is None:
         return local_direc
-    elif extension in possible_extension_set:
-        return "{0}/{1}.{2}".format(local_direc, genome_name, extension)
     else:
-        LOGGER.error("extension={} is not allowed : {}".format(extension, possible_extension_set))
-        return None # TODO: should throw exception
+        assert extension in possible_extension_set
+        return "{0}/{1}.{2}".format(local_direc, genome_name, extension)
 
 
 def build_clade_filepath(clade_name):

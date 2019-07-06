@@ -50,7 +50,7 @@ def build_ftp_filepath(accession, extension=None):
         return refseqDAO.build_ftp_filepath(accession, extension)
     else:
         logger.debug("accession={} not found".format(accession))
-        return None
+        return None  # ToDo should throw exception
 
 
 def __load():

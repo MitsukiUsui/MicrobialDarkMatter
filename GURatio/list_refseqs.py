@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+list all .faa for MMSeq reference (RefSeq)
+"""
+
 import sys
 import pathlib
 
@@ -27,6 +31,6 @@ def main(meta_fp, arg_fp):
 
 
 if __name__ == "__main__":
-    meta_fp = "/home/mitsuki/GeneNeighborhoodAnalysis/dataCollection/data/meta/REP.tsv"
-    arg_fp = "./arg/refseqs.arg"
+    arg_fp = sys.argv[1]
+    meta_fp = "/home/mitsuki/GeneNeighborhoodAnalysis/dataCollection/data/meta/REP.tsv"  # TODO: should use DB instead
     main(meta_fp, arg_fp)

@@ -51,6 +51,11 @@ class IDManager:
 
 
 class CdsDAO:
+    """
+    Data Access Object class to get cdss by various attributes (cds_id, cds_name, gene_name).
+    ToDo: update to throw exception when failed to find target cdss
+    """
+
     def __init__(self, cdss):
         self.cdss = cdss
         self.id2idx = defaultdict(lambda: None)

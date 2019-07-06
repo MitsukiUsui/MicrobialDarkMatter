@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from splitlib import SegmentManager, Wcf
+from .splitlib import SegmentManager, Wcf
 
 
 class TestSegmentManager(unittest.TestCase):

@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-from scorelib import score_naive, score_independent, score_conditional
+from .scorelib import score_naive, score_independent, score_conditional
 
 
 class TestSegmentManager(unittest.TestCase):

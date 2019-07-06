@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Detect all gene neighborhood relationships under given thresholds
+"""
+
 import sys
 import pathlib
 import logging
@@ -13,13 +17,13 @@ ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from neighborlib import NeighborhoodMatrix, set_gene_name, set_split
-from scorelib import score_naive, score_independent, score_conditional
+from .neighborlib import NeighborhoodMatrix, set_gene_name, set_split, calc_bls
+from .scorelib import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
 THRESH = {
-    "SIZE": 10,
-    "SCORE": 0.8
+    "SIZE": 10, # lower limit for gene size
+    "SCORE": 0.8  # lower limit for neighborhood score to be reported
 }
 
 
@@ -111,8 +115,8 @@ def main(args):
         LOGGER.info("start {}".format(origin_gene_name))
         records += detect_edges_all(origin_gene_name, args.score_method, cdsDAO, tree)
 
-    out_df = pd.DataFrame(records)
-    out_df = out_df[["x", "y", "score", "score_naive", "total", "found", "bls", "top_offset", "top_relationship", "top_ratio"]]
+    out_df = pd.DataFrame(records, columns=["x", "y", "score",
+                                            "score_naive", "total", "found", "bls", "top_offset", "top_relationship", "top_ratio"])
     out_df.to_csv(args.out_fp, sep='\t', index=False)
     LOGGER.info("saved results to {}".format(args.out_fp))
 

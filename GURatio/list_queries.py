@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+List all .faa for MMSeq query
+"""
+
 import sys
 import pathlib
 
@@ -29,5 +33,5 @@ def main(arg_fp):
 
 
 if __name__ == "__main__":
-    arg_fp = "./arg/queries.arg"
+    arg_fp = sys.argv[1]
     main(arg_fp)

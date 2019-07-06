@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Extract only the best MMSeqs hit for each query
+"""
+
 import sys
 import pathlib
 

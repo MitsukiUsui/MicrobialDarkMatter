@@ -7,12 +7,13 @@ MMSEQS_SCHEMA = [("qname", object), ("sname", object),
 
 
 def read_mmseqs(fp, **kwargs):
-    # trim schema based on the first line
+    # trim schema based on the first line.
     with open(fp, 'r') as f:
         line = f.readline().strip()
+    # ToDo add assetion for invalid SCHEMA length
     schema = MMSEQS_SCHEMA[:len(line.split())]
 
-    # overwrite default params
+    # set params by overwrite default params
     params = {
         "header": None,
         "sep": '\t',

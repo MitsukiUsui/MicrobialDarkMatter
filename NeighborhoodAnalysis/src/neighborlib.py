@@ -10,15 +10,11 @@ LOGGER = getLogger(__name__)
 
 
 class MatrixPosition:
-    """
-    store position in NeighborhoodMatrix (NxM)
-    """
-
     def __init__(self, i, j, offset, direction, origin_name, cds_name, gene_name):
         self.i = i
         self.j = j
         self.offset = offset
-        self.direction = direction
+        self.direction = direction  # ToDo rename to is_forward
         self.origin_name = origin_name
         self.cds_name = cds_name
         self.gene_name = gene_name
@@ -37,8 +33,8 @@ class NeighborhoodMatrix:
         """
         initialize the following data structures:
 
-        self.matrix: 2D matrix of MatrixPosition (HxW), where H = #origin-cdss and W = 2 * DIST + 1
-        self.indicator_matrix: numpy 2D matrix (HxW), where -1 for missing, 0 for observed
+        self.matrix: 2D (HxW) matrix of MatrixPosition (or None), where H = number of origin cdss and W = 2 * DIST + 1
+        self.indicator_matrix: numpy 2D (HxW) matrix , where -1 for missing, 0 for observed. This is the template for to_indicator_matrix(self, gene_name)
         self.offset2count: key: offset, val: observed count
         self.offset2positions: key: offset, val: list of MatrixPosition and None
         self.gene2positions: key: gene_name, val: list of MatrixPosition
@@ -84,27 +80,47 @@ class NeighborhoodMatrix:
         return "<Matrix@{0}({1}x{2})>".format(self.origin_gene_name, self.shape[0], self.shape[1])
 
     def get_count_by_offset(self, offset):
+        """
+        :param offset: should between [-DIST, DIST]
+        :return: number of cdss found at the offset
+        """
+
         return self.offset2count[offset]
 
     def get_positions_by_offset(self, offset, dropna=False):
+        """
+        :param offset:
+        :param dropna: remove None if true
+        :return: all MatrixPositions or None at the offset
+        """
+
         if dropna:
             return list(filter(lambda pos: pos is not None, self.offset2positions[offset]))
         else:
             return self.offset2positions[offset]
 
     def get_positions_by_gene_name(self, gene_name):
+        """
+        :param gene_name:
+        :return: all MatrixPoisitions where the gene found
+        """
+
         return self.gene2positions[gene_name]
 
     def get_neighbor_gene_names(self):
+        """
+        list all the neighborhood gene names which appeared at least once in the matrix.
+        """
+
         gene_name_set = set(self.gene2positions.keys())
         gene_name_set.remove(self.origin_gene_name)
-        if None in gene_name_set:
-            gene_name_set.remove(None) # default value for set_gene_name()
+        if None in gene_name_set:  # default value for set_gene_name()
+            gene_name_set.remove(None)
         return gene_name_set
 
     def to_indicator_matrix(self, gene_name):
         """
-        convert to indicator matrix, where 1 stands for target gene, 0 for other gene,and -1 for missing
+        convert to indicator matrix, where 1 stands for target gene, 0 for other gene, and -1 for missing
         """
 
         ret = self.indicator_matrix.copy()

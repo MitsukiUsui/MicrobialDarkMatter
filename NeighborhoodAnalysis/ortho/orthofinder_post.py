@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Parse OrthoFinder result directory and create a simple TSV file which list (gene_name, cds_name) combinations
+"""
+
 import sys
 import pathlib
 import logging
@@ -40,6 +44,7 @@ def main(clade_name):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
                         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    clade_name = sys.argv[1]
     #    clade_name = "Enterobacterales"
-    clade_name = "MGII"
+    #    clade_name = "MGII"
     main(clade_name)
