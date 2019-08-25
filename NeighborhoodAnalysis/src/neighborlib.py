@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from logging import getLogger
 from collections import defaultdict
+from logging import getLogger
 
 import numpy as np
 import pandas as pd
@@ -10,11 +10,11 @@ LOGGER = getLogger(__name__)
 
 
 class MatrixPosition:
-    def __init__(self, i, j, offset, direction, origin_name, cds_name, gene_name):
+    def __init__(self, i, j, offset, is_forward, origin_name, cds_name, gene_name):
         self.i = i
         self.j = j
         self.offset = offset
-        self.direction = direction  # ToDo rename to is_forward
+        self.is_forward = is_forward
         self.origin_name = origin_name
         self.cds_name = cds_name
         self.gene_name = gene_name
@@ -26,6 +26,7 @@ class MatrixPosition:
     def __repr__(self):
         return "<MatrixPosition({},{})>".format(self.i, self.j)
 
+
 class NeighborhoodMatrix:
     DIST = 5
 
@@ -34,7 +35,7 @@ class NeighborhoodMatrix:
         initialize the following data structures:
 
         self.matrix: 2D (HxW) matrix of MatrixPosition (or None), where H = number of origin cdss and W = 2 * DIST + 1
-        self.indicator_matrix: numpy 2D (HxW) matrix , where -1 for missing, 0 for observed. This is the template for to_indicator_matrix(self, gene_name)
+        self.indicator_matrix_template: numpy 2D (HxW) matrix , where -1 for missing, 0 for observed. This is the template for to_indicator_matrix(self, gene_name)
         self.offset2count: key: offset, val: observed count
         self.offset2positions: key: offset, val: list of MatrixPosition and None
         self.gene2positions: key: gene_name, val: list of MatrixPosition
@@ -46,16 +47,16 @@ class NeighborhoodMatrix:
         matrix = []
         for i, origin_cds in enumerate(cdsDAO.get_cdss_by_gene_name(origin_gene_name)):
             row = []
-            for j, offset in enumerate(range(-self.DIST, self.DIST+1)):
+            for j, offset in enumerate(range(-self.DIST, self.DIST + 1)):
                 neighbor_cds = cdsDAO.get_neighbor_cds(origin_cds, offset)
                 if neighbor_cds is None:
                     pos = None
                 else:
                     pos = MatrixPosition(i, j, offset,
-                                         direction = neighbor_cds.strand==origin_cds.strand,
-                                         origin_name = origin_cds.cds_name,
-                                         cds_name = neighbor_cds.cds_name,
-                                         gene_name = neighbor_cds.gene_name)
+                                         is_forward=neighbor_cds.strand == origin_cds.strand,
+                                         origin_name=origin_cds.cds_name,
+                                         cds_name=neighbor_cds.cds_name,
+                                         gene_name=neighbor_cds.gene_name)
                 row.append(pos)
             assert len(row) == 2 * self.DIST + 1
             matrix.append(row)
@@ -63,8 +64,8 @@ class NeighborhoodMatrix:
         self.shape = (len(self.matrix), 2 * self.DIST + 1)
 
         # initialize index structures
-        self.indicator_matrix = -np.ones((self.shape[0], self.shape[1])).astype(float)
-        self.offset2count = defaultdict(lambda:0)
+        self.indicator_matrix_template = -np.ones((self.shape[0], self.shape[1])).astype(float)
+        self.offset2count = defaultdict(lambda: 0)
         self.offset2positions = defaultdict(list)
         self.gene2positions = defaultdict(list)
         for i, row in enumerate(self.matrix):
@@ -72,7 +73,7 @@ class NeighborhoodMatrix:
                 offset = j - self.DIST
                 self.offset2positions[offset].append(pos)
                 if pos is not None:
-                    self.indicator_matrix[i][j] = 0
+                    self.indicator_matrix_template[i][j] = 0
                     self.offset2count[offset] += 1
                     self.gene2positions[pos.gene_name].append(pos)
 
@@ -123,10 +124,11 @@ class NeighborhoodMatrix:
         convert to indicator matrix, where 1 stands for target gene, 0 for other gene, and -1 for missing
         """
 
-        ret = self.indicator_matrix.copy()
+        ret = self.indicator_matrix_template.copy()
         for pos in self.get_positions_by_gene_name(gene_name):
             ret[pos.i][pos.j] = 1
         return ret
+
 
 def calc_bls(genome_names, tree):
     """
@@ -150,9 +152,11 @@ def calc_bls(genome_names, tree):
             stack.append(child)
     return bls
 
+
 def set_split(cdss, split_fp):
     # TODO
     return cdss
+
 
 def set_gene_name(cdss, ortho_fp):
     ortho_df = pd.read_csv(ortho_fp, sep='\t')

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import unittest
-from .splitlib import SegmentManager, Wcf
+
+from splitlib import SegmentManager, Wcf
 
 
 class TestSegmentManager(unittest.TestCase):
@@ -45,6 +46,7 @@ class TestSegmentManager(unittest.TestCase):
         self.assertEqual(segment_manager.get_members_by_id(child_id1), member[:idx])
         self.assertEqual(segment_manager.get_members_by_id(child_id2), member[idx:])
 
+
 class TestCwf(unittest.TestCase):
     def test_cwf(self):
         x = [1, 2, 4]
@@ -56,6 +58,7 @@ class TestCwf(unittest.TestCase):
         self.assertEqual(wcf[3], 0.6)
         self.assertEqual(wcf[4], 1.0)
         self.assertEqual(wcf[5], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

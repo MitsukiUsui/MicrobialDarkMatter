@@ -9,8 +9,8 @@ from scipy import stats
 class SegmentManager:
     def __init__(self):
         self.next_id = 0
-        self.segment2members = dict() #key: segment_id, val: list of members
-        self.size2segments = defaultdict(set) #key: size, val: set of segment_ids of the size
+        self.segment2members = dict()  # key: segment_id, val: list of members
+        self.size2segments = defaultdict(set)  # key: size, val: set of segment_ids of the size
         self.member_count = 0
 
     def __len__(self):
@@ -73,14 +73,16 @@ class SegmentManager:
         df = pd.DataFrame(records, columns=["segment_id", "member"])
         return df
 
+
 class Wcf:
     """
     weighted cumlative frequencies
     """
+
     def __init__(self, x, y):
         assert len(x) == len(y)
-        weights = [x*y for x, y in zip(x, y)]
-        res = stats.cumfreq(x, numbins=max(x)+1, defaultreallimits=(0, max(x)+1), weights=weights)
+        weights = [x * y for x, y in zip(x, y)]
+        res = stats.cumfreq(x, numbins=max(x) + 1, defaultreallimits=(0, max(x) + 1), weights=weights)
         self.wcf = res.cumcount / res.cumcount[-1]
 
     def __getitem__(self, key):

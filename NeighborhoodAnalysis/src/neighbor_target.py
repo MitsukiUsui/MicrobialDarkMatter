@@ -5,10 +5,10 @@ Given a set of neighborhood relationships, calculate neighborhood scores for the
 This script were used to calculate RMSE for each scoring method
 """
 
-import sys
-import pathlib
-import logging
 import argparse
+import logging
+import pathlib
+import sys
 
 import pandas as pd
 
@@ -16,8 +16,8 @@ ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from .neighborlib import NeighborhoodMatrix, set_gene_name, set_split
-from .scorelib import score_naive, score_independent, score_conditional
+from neighborlib import NeighborhoodMatrix, set_gene_name, set_split
+from scorelib import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
 
@@ -69,9 +69,9 @@ def main(args):
     LOGGER.info("saved results to {}".format(args.out_fp))
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, datefmt="%m/%d/%Y %I:%M:%S",
-                            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     parser = argparse.ArgumentParser()
     parser.add_argument("--clade_name", required=True, help="clade_name")
     parser.add_argument("--score_method", required=True, choices=["naive", "independent", "conditional"])

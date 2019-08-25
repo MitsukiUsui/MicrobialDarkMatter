@@ -4,10 +4,10 @@
 Detect all gene neighborhood relationships under given thresholds
 """
 
-import sys
-import pathlib
-import logging
 import argparse
+import logging
+import pathlib
+import sys
 from collections import Counter
 
 import pandas as pd
@@ -17,19 +17,19 @@ ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from .neighborlib import NeighborhoodMatrix, set_gene_name, set_split, calc_bls
-from .scorelib import score_naive, score_independent, score_conditional
+from neighborlib import NeighborhoodMatrix, set_gene_name, set_split, calc_bls
+from scorelib import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
 THRESH = {
-    "SIZE": 10, # lower limit for gene size
+    "SIZE": 10,  # lower limit for gene size
     "SCORE": 0.8  # lower limit for neighborhood score to be reported
 }
 
 
 def find_most_common_position(positions):
-    def get_relationship(offset, direction):
-        if direction == True:
+    def get_relationship(offset, is_forward):
+        if is_forward:
             return "cooriented"
         elif offset < 0:
             return "divergent"
@@ -37,9 +37,9 @@ def find_most_common_position(positions):
             return "convergent"
 
     assert len(positions) > 0
-    c = Counter([(pos.offset, pos.direction) for pos in positions])
-    (offset, direction), freq = c.most_common()[0]
-    relationship = get_relationship(offset, direction)
+    c = Counter([(pos.offset, pos.is_forward) for pos in positions])
+    (offset, is_forward), freq = c.most_common()[0]
+    relationship = get_relationship(offset, is_forward)
 
     return {
         "top_offset": offset,
@@ -115,8 +115,8 @@ def main(args):
         LOGGER.info("start {}".format(origin_gene_name))
         records += detect_edges_all(origin_gene_name, args.score_method, cdsDAO, tree)
 
-    out_df = pd.DataFrame(records, columns=["x", "y", "score",
-                                            "score_naive", "total", "found", "bls", "top_offset", "top_relationship", "top_ratio"])
+    out_df = pd.DataFrame(records, columns=["x", "y", "score", "score_naive", "total", "found", "bls",
+                                            "top_offset", "top_relationship", "top_ratio"])
     out_df.to_csv(args.out_fp, sep='\t', index=False)
     LOGGER.info("saved results to {}".format(args.out_fp))
 
