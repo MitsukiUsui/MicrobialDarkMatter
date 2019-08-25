@@ -13,7 +13,7 @@ import pandas as pd
 ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import load_genome_names_by_clade_name, load_cdss_by_genome_names
-from .splitlib import SegmentManager, Wcf
+from splitlib import SegmentManager, Wcf
 
 LOGGER = logging.getLogger(__name__)
 

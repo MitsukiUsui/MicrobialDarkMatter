@@ -153,14 +153,21 @@ def calc_bls(genome_names, tree):
     return bls
 
 
-def set_split(cdss, split_fp):
-    # TODO
+def set_split_to_cdss(cdss, split_fp):
+    split_df = pd.read_csv(split_fp, sep='\t')
+    cds2split = dict(zip(split_df["cds_id"], split_df["split_id"]))
+    for cds in cdss:
+        if cds.cds_id in cds2split:
+            cds.scaffold_id = cds2split[cds.cds_id]
+        else:
+            LOGGER.error("cds_id = {} is not defined in {}".format(cds.cds_id, split_fp))
+            exit(1)
     return cdss
 
 
-def set_gene_name(cdss, ortho_fp):
+def set_gene_name_to_cdss(cdss, ortho_fp):
     ortho_df = pd.read_csv(ortho_fp, sep='\t')
-    cds2gene = dict([(cds, gene) for cds, gene in zip(ortho_df["cds_name"], ortho_df["gene_name"])])
+    cds2gene = dict(zip(ortho_df["cds_name"], ortho_df["gene_name"]))
     for cds in cdss:
         if cds.cds_name in cds2gene:
             cds.gene_name = cds2gene[cds.cds_name]

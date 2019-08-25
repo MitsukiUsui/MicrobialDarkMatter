@@ -17,7 +17,7 @@ ROOT_PATH = pathlib.Path().joinpath('../../').resolve()
 sys.path.append(str(ROOT_PATH))
 from mylib.db import CdsDAO, load_genome_names_by_clade_name, load_cdss_by_genome_names
 from mylib.path import build_clade_filepath
-from neighborlib import NeighborhoodMatrix, set_gene_name, set_split, calc_bls
+from neighborlib import NeighborhoodMatrix, set_gene_name_to_cdss, set_split_to_cdss, calc_bls
 from scorelib import score_naive, score_independent, score_conditional
 
 LOGGER = logging.getLogger(__name__)
@@ -94,11 +94,11 @@ def main(args):
 
     ortho_fp = pathlib.Path(build_clade_filepath(args.clade_name)).joinpath("./ortho/{}.ortho".format(args.clade_name))
     ortho_df = pd.read_csv(ortho_fp, sep='\t')
-    cdss = set_gene_name(cdss, ortho_fp)
+    cdss = set_gene_name_to_cdss(cdss, ortho_fp)
     LOGGER.info("loaded orthology from {}".format(ortho_fp))
 
     if args.split_fp:
-        cdss = set_split(cdss, args.split_fp)
+        cdss = set_split_to_cdss(cdss, args.split_fp)
         LOGGER.info("loaded simulated segmentation from {}".format(args.split_fp))
 
     tree = None
